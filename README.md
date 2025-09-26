@@ -50,7 +50,7 @@ test content
 processed: test content
 ```
 
-Running the test will compile the CLI program, make it available to the testscript environment, and run the specified commands.
+Running the test will compile the CLI program, make it available to the testscript environment, run the specified commands, and check its output.
 
 ## Installation
 
@@ -113,7 +113,7 @@ custom-cmd arg1 arg2 arg3
 
 ## Test Script Format
 
-Test scripts use the `.txtar` format. For complete format documentation, see the [original Go testscript documentation](https://github.com/rogpeppe/go-internal/tree/master/testscript). For examples, see the [`testdata/`](testdata/) directory in this repository.
+Test scripts use the `.txtar` format. For complete format documentation, see the [original Go testscript documentation]([https://github.com/rogpeppe/go-internal/tree/master/testscript](https://pkg.go.dev/github.com/rogpeppe/go-internal@v1.14.1/testscript#Params)).
 
 ### Built-in Commands
 
