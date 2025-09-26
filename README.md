@@ -1,5 +1,7 @@
 # testscript-rs
 
+[![CI](https://github.com/imjasonh/testscript-rs/workflows/CI/badge.svg)](https://github.com/imjasonh/testscript-rs/actions)
+
 A Rust crate for testing command-line tools using filesystem-based script files.
 
 testscript-rs provides a framework for writing integration tests for CLI applications using the `.txtar` format, where test scripts and file contents are combined in a single file.
