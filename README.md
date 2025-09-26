@@ -139,6 +139,20 @@ Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-interna
 
 Commands can be prefixed with conditions (`[unix]`) or negated (`!`).
 
+## Error Messages
+
+testscript-rs provides detailed error messages with script context to make debugging easy:
+
+```
+Error in testdata/hello.txt at line 6:
+  3 | stdout "this works"
+  4 |
+  5 | # This command will fail
+> 6 | exec nonexistent-command arg1 arg2
+  7 | stdout "should not get here"
+  8 |
+```
+
 > Note: Some features of `testscript` in Go are not supported in this Rust port:
 > 
 > - `[gc]` for whether Go was built with gc

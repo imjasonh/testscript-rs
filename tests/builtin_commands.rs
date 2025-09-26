@@ -138,7 +138,12 @@ exec echo "This should not run""#;
 
     let result = run_test(&script_path);
     assert!(result.is_err(), "Skip test should have failed");
-    assert!(result.unwrap_err().to_string().contains("SKIP"));
+
+    let error_msg = result.unwrap_err().to_string();
+    println!("Skip error message: {}", error_msg);
+    // The skip command should create a contextual error showing the skip line
+    assert!(error_msg.contains("skip_test.txt"));
+    assert!(error_msg.contains("skip \"This test should be skipped\""));
 }
 
 #[test]
