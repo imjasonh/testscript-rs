@@ -659,7 +659,18 @@ pub fn run_test(script_path: &Path) -> Result<()> {
 pub fn run_script(script_path: &Path, params: &RunParams) -> Result<()> {
     // Read and parse the script
     let content = fs::read_to_string(script_path)?;
-    let script = crate::parser::parse(&content)?;
+    let script = crate::parser::parse(&content).map_err(|e| {
+        // Enhance parse errors with script context
+        match e {
+            Error::Parse { line, message } => {
+                Error::script_error(script_path.to_string_lossy().to_string(), line, &content, Error::Parse { line, message })
+            }
+            other => other,
+        }
+    })?;
+
+    // Create script context for better error reporting
+    let script_file = script_path.to_string_lossy().to_string();
 
     // Create test environment
     let mut env = TestEnvironment::new()?;
@@ -678,7 +689,10 @@ pub fn run_script(script_path: &Path, params: &RunParams) -> Result<()> {
 
     // Execute commands
     for command in &script.commands {
-        execute_command(&mut env, command, params)?;
+        if let Err(e) = execute_command(&mut env, command, params) {
+            // Wrap error with script context
+            return Err(Error::script_error(&script_file, command.line_num, &content, e));
+        }
 
         // Check for early termination
         if env.should_skip {
