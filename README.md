@@ -6,7 +6,7 @@ A Rust crate for testing command-line tools using filesystem-based script files.
 
 testscript-rs provides a framework for writing integration tests for CLI applications using the `.txtar` format, where test scripts and file contents are combined in a single file.
 
-This crate is inspired by and aims to be compatible with Go's [`github.com/rogpeppe/go-internal/testscript`](https://github.com/rogpeppe/go-internal/tree/master/testscript) package.
+This crate is inspired by and aims to be compatible with Go's [`github.com/rogpeppe/go-internal/testscript`](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript) package.
 
 Testscript is primarily useful for describing testing scenarios involving executing commands and dealing with files. This makes it a good choice for testing CLI applications in a succinct and human-readable way.
 
@@ -113,7 +113,7 @@ custom-cmd arg1 arg2 arg3
 
 ## Test Script Format
 
-Test scripts use the `.txtar` format. For complete format documentation, see the [original Go testscript documentation]([https://github.com/rogpeppe/go-internal/tree/master/testscript](https://pkg.go.dev/github.com/rogpeppe/go-internal@v1.14.1/testscript#Params)).
+Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-internal/txtar) format. For complete format documentation, see the [original Go testscript documentation](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript).
 
 ### Built-in Commands
 
