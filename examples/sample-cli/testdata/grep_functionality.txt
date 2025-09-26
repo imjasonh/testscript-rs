@@ -1,0 +1,30 @@
+# Test grep functionality
+
+# Basic grep
+exec ./sample-cli grep "world" test_file.txt
+stdout "test_file.txt:1: Hello world"
+
+# Case insensitive grep
+exec ./sample-cli grep --ignore-case "HELLO" test_file.txt
+stdout "test_file.txt:1: Hello world"
+
+# Multiple files
+exec ./sample-cli grep "file" file1.txt file2.txt
+stdout "file1.txt:1: First file"
+stdout "file2.txt:1: Single line file"
+
+# No matches
+exec ./sample-cli grep "xyz" test_file.txt
+! stdout "xyz"
+
+-- test_file.txt --
+Hello world
+This is line two
+Line three here
+
+-- file1.txt --
+First file
+Second line
+
+-- file2.txt --
+Single line file

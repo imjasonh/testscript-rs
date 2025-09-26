@@ -1,0 +1,3 @@
+# Test single quote parsing
+exec echo "hello world"
+stdout 'hello world\n'

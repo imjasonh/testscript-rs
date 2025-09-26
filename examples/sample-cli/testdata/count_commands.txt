@@ -1,0 +1,34 @@
+# Test count functionality
+
+# Count lines in a file
+exec ./sample-cli count test_file.txt
+stdout "test_file.txt: 3"
+
+# Count words
+exec ./sample-cli count --mode words test_file.txt
+stdout "test_file.txt: 9"
+
+# Count characters
+exec ./sample-cli count --mode chars test_file.txt
+stdout "test_file.txt: 44"
+
+# Test multiple files
+exec ./sample-cli count file1.txt file2.txt
+stdout "file1.txt: 2"
+stdout "file2.txt: 1"
+
+# Test error on missing file
+! exec ./sample-cli count nonexistent.txt
+stderr ".*No such file.*"
+
+-- test_file.txt --
+Hello world
+This is line two
+Line three here
+
+-- file1.txt --
+First file
+Second line
+
+-- file2.txt --
+Single line file

@@ -1,0 +1,19 @@
+# Test basic sample-cli functionality
+
+# Test help output
+exec ./sample-cli --help
+stdout ".*sample CLI tool.*"
+
+# Test version
+exec ./sample-cli --version
+stdout "sample-cli 1.0"
+
+# Test no command shows info
+exec ./sample-cli
+stdout ".*demonstration CLI tool.*"
+stdout ".*--help.*"
+
+-- test_file.txt --
+Hello world
+This is line two
+Line three here

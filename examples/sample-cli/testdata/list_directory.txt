@@ -1,0 +1,17 @@
+# Test directory listing
+
+# Create some files and directories first
+mkdir test_dir
+exec ./sample-cli create test_dir/nested_file.txt --content "nested"
+
+# List current directory
+exec ./sample-cli list
+stdout "FILE.*existing_file.txt"
+stdout "DIR.*test_dir"
+
+# List specific directory
+exec ./sample-cli list test_dir
+stdout "FILE.*nested_file.txt"
+
+-- existing_file.txt --
+This file exists

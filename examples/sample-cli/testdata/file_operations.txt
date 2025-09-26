@@ -1,0 +1,25 @@
+# Test file creation and removal
+
+# Create a file with content
+exec ./sample-cli create newfile.txt --content "Hello from CLI"
+stdout "Created file: newfile.txt"
+exists newfile.txt
+exec cat newfile.txt
+stdout "Hello from CLI"
+
+# Create empty file
+exec ./sample-cli create empty.txt
+exists empty.txt
+exec ./sample-cli count --mode chars empty.txt
+stdout "empty.txt: 0"
+
+# Remove files
+exec ./sample-cli remove newfile.txt empty.txt
+stdout "Removed: newfile.txt"
+stdout "Removed: empty.txt"
+! exists newfile.txt
+! exists empty.txt
+
+# Try to remove non-existent file
+exec ./sample-cli remove nonexistent.txt
+stderr "File not found: nonexistent.txt"

@@ -1,0 +1,21 @@
+# Test Rust-relevant conditions
+
+# Platform conditions should work
+[unix] mkdir unix_dir
+[windows] mkdir windows_dir
+
+# These should work based on current platform
+[linux] exists unix_dir
+[darwin] exists unix_dir
+[windows] ! exists unix_dir
+[windows] exists windows_dir
+
+# Debug/release conditions
+[debug] mkdir debug_dir
+[release] mkdir release_dir
+
+# One should exist, one shouldn't
+[debug] exists debug_dir
+[debug] ! exists release_dir
+[release] exists release_dir
+[release] ! exists debug_dir
