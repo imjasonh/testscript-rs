@@ -2,7 +2,7 @@
 
 use std::fs;
 use tempfile::TempDir;
-use testscript_rs::{run_test};
+use testscript_rs::run_test;
 
 #[test]
 fn test_exists_command() {
@@ -118,7 +118,10 @@ input content"#;
     let result = run_test(&script_path);
     // This might fail if cat isn't available - that's okay for now
     if result.is_err() {
-        println!("Stdin test failed (cat might not be available): {:?}", result);
+        println!(
+            "Stdin test failed (cat might not be available): {:?}",
+            result
+        );
     }
 }
 

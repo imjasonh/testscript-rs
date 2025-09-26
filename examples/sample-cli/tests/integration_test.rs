@@ -2,8 +2,8 @@
 //!
 //! This demonstrates how to use testscript-rs to test a CLI application.
 
-use testscript_rs::testscript;
 use std::process::Command;
+use testscript_rs::testscript;
 
 #[test]
 fn test_sample_cli() {
@@ -20,9 +20,10 @@ fn test_sample_cli() {
 
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                return Err(testscript_rs::Error::Generic(
-                    format!("Failed to build sample-cli: {}", stderr)
-                ));
+                return Err(testscript_rs::Error::Generic(format!(
+                    "Failed to build sample-cli: {}",
+                    stderr
+                )));
             }
 
             // Copy binary to test working directory
@@ -40,11 +41,14 @@ fn test_sample_cli() {
             {
                 use std::os::unix::fs::PermissionsExt;
                 let mut perms = std::fs::metadata(&dest)
-                    .map_err(|e| testscript_rs::Error::Generic(format!("Failed to get permissions: {}", e)))?
+                    .map_err(|e| {
+                        testscript_rs::Error::Generic(format!("Failed to get permissions: {}", e))
+                    })?
                     .permissions();
                 perms.set_mode(0o755);
-                std::fs::set_permissions(&dest, perms)
-                    .map_err(|e| testscript_rs::Error::Generic(format!("Failed to set permissions: {}", e)))?;
+                std::fs::set_permissions(&dest, perms).map_err(|e| {
+                    testscript_rs::Error::Generic(format!("Failed to set permissions: {}", e))
+                })?;
             }
 
             println!("Built and copied sample-cli to: {}", dest.display());
@@ -57,6 +61,4 @@ fn test_sample_cli() {
         Ok(_) => println!("All sample-cli tests passed!"),
         Err(e) => println!("Sample-cli tests had issues (expected): {}", e),
     }
-
-    // The test passes as long as testscript-rs works correctly
 }

@@ -8,7 +8,7 @@ name = "sample-cli"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 
 [dev-dependencies]
 testscript-rs = { path = "../.." }

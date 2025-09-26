@@ -233,9 +233,9 @@ fn parse_command_tokens(input: &str) -> Result<Vec<String>> {
                         match next_ch {
                             '\\' => current_token.push('\\'),
                             '\'' => current_token.push('\''),
-                            'n' => current_token.push('\n'),  // Still process \n in single quotes for Go compat
-                            't' => current_token.push('\t'),  // Still process \t in single quotes for Go compat
-                            'r' => current_token.push('\r'),  // Still process \r in single quotes for Go compat
+                            'n' => current_token.push('\n'), // Still process \n in single quotes for Go compat
+                            't' => current_token.push('\t'), // Still process \t in single quotes for Go compat
+                            'r' => current_token.push('\r'), // Still process \r in single quotes for Go compat
                             _ => {
                                 current_token.push('\\');
                                 current_token.push(next_ch);
@@ -280,8 +280,14 @@ mod tests {
 
     #[test]
     fn test_parse_file_header() {
-        assert_eq!(parse_file_header("-- hello.txt --"), Some("hello.txt".to_string()));
-        assert_eq!(parse_file_header("-- sub/dir/file.go --"), Some("sub/dir/file.go".to_string()));
+        assert_eq!(
+            parse_file_header("-- hello.txt --"),
+            Some("hello.txt".to_string())
+        );
+        assert_eq!(
+            parse_file_header("-- sub/dir/file.go --"),
+            Some("sub/dir/file.go".to_string())
+        );
         assert_eq!(parse_file_header("--hello--"), None);
         assert_eq!(parse_file_header("hello"), None);
     }
@@ -311,14 +317,18 @@ mod tests {
         assert!(!cmd.background);
         assert!(!cmd.negated);
 
-        let cmd = parse_command_line("[windows] exec echo hello", 2).unwrap().unwrap();
+        let cmd = parse_command_line("[windows] exec echo hello", 2)
+            .unwrap()
+            .unwrap();
         assert_eq!(cmd.condition, Some("windows".to_string()));
 
         let cmd = parse_command_line("exec echo hello &", 3).unwrap().unwrap();
         assert!(cmd.background);
         assert_eq!(cmd.args, vec!["echo", "hello"]);
 
-        let cmd = parse_command_line("! exists missing_file", 4).unwrap().unwrap();
+        let cmd = parse_command_line("! exists missing_file", 4)
+            .unwrap()
+            .unwrap();
         assert!(cmd.negated);
         assert_eq!(cmd.name, "exists");
         assert_eq!(cmd.args, vec!["missing_file"]);
@@ -373,6 +383,9 @@ second file
         assert_eq!(script.files[1].name, "file2.txt");
         assert_eq!(script.files[1].contents, b"second file");
         assert_eq!(script.files[2].name, "expected.txt");
-        assert_eq!(script.files[2].contents, b"first file\ncontent\nsecond file");
+        assert_eq!(
+            script.files[2].contents,
+            b"first file\ncontent\nsecond file"
+        );
     }
 }

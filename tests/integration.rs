@@ -41,14 +41,19 @@ count-args one two three"#;
     let result = testscript::run(testdata_dir.to_string_lossy())
         .command("greet", |_env, args| {
             if args.is_empty() {
-                return Err(testscript_rs::Error::Generic("greet requires a name".to_string()));
+                return Err(testscript_rs::Error::Generic(
+                    "greet requires a name".to_string(),
+                ));
             }
             // Custom command logic would go here
             Ok(())
         })
         .command("count-args", |_env, args| {
             if args.len() != 3 {
-                return Err(testscript_rs::Error::Generic(format!("expected 3 args, got {}", args.len())));
+                return Err(testscript_rs::Error::Generic(format!(
+                    "expected 3 args, got {}",
+                    args.len()
+                )));
             }
             Ok(())
         })
