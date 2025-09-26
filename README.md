@@ -137,6 +137,12 @@ Test scripts use the `.txtar` format. For complete format documentation, see the
 
 Commands can be prefixed with conditions (`[unix]`) or negated (`!`).
 
+> Note: Some features of `testscript` in Go are not supported in this Rust port:
+> 
+> - `[gc]` for whether Go was built with gc
+> - `[gccgo]` for whether Go was built with gccgo
+> - `[go1.x]` for whether the Go version is 1.x or later
+
 ## Examples
 
 See [`examples/sample-cli/`](./examples/sample-cli/) and its `testdata` directory for more examples.
