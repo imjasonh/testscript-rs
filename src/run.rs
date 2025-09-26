@@ -175,7 +175,12 @@ impl TestEnvironment {
     }
 
     /// Execute a command in the background
-    pub fn execute_background_command(&mut self, name: &str, cmd: &str, args: &[String]) -> Result<()> {
+    pub fn execute_background_command(
+        &mut self,
+        name: &str,
+        cmd: &str,
+        args: &[String],
+    ) -> Result<()> {
         let mut command = StdCommand::new(cmd);
         command
             .args(args)
@@ -196,7 +201,10 @@ impl TestEnvironment {
             self.last_output = Some(output.clone());
             Ok(output)
         } else {
-            Err(Error::command_error("wait", format!("No background process named '{}'", name)))
+            Err(Error::command_error(
+                "wait",
+                format!("No background process named '{}'", name),
+            ))
         }
     }
 
@@ -210,11 +218,17 @@ impl TestEnvironment {
         };
 
         if !new_dir.exists() {
-            return Err(Error::command_error("cd", format!("Directory '{}' does not exist", path)));
+            return Err(Error::command_error(
+                "cd",
+                format!("Directory '{}' does not exist", path),
+            ));
         }
 
         if !new_dir.is_dir() {
-            return Err(Error::command_error("cd", format!("'{}' is not a directory", path)));
+            return Err(Error::command_error(
+                "cd",
+                format!("'{}' is not a directory", path),
+            ));
         }
 
         self.current_dir = new_dir;
@@ -248,21 +262,34 @@ impl TestEnvironment {
     /// Compare command output with expected content
     pub fn compare_output(&self, output_type: &str, expected: &str) -> Result<()> {
         let actual = match self.last_output {
-            Some(ref output) => {
-                match output_type {
-                    "stdout" => String::from_utf8_lossy(&output.stdout).trim_end().to_string(),
-                    "stderr" => String::from_utf8_lossy(&output.stderr).trim_end().to_string(),
-                    _ => return Err(Error::command_error(output_type, "Unknown output type")),
-                }
+            Some(ref output) => match output_type {
+                "stdout" => String::from_utf8_lossy(&output.stdout)
+                    .trim_end()
+                    .to_string(),
+                "stderr" => String::from_utf8_lossy(&output.stderr)
+                    .trim_end()
+                    .to_string(),
+                _ => return Err(Error::command_error(output_type, "Unknown output type")),
+            },
+            None => {
+                return Err(Error::command_error(
+                    output_type,
+                    "No command output available",
+                ))
             }
-            None => return Err(Error::command_error(output_type, "No command output available")),
         };
 
         // Substitute environment variables in the expected pattern
         let expected_substituted = self.substitute_env_vars(expected);
 
         // Check if expected is a regex pattern (contains regex special characters)
-        if expected_substituted.contains('^') || expected_substituted.contains('$') || expected_substituted.contains('[') || expected_substituted.contains('(') || expected_substituted.contains('*') || expected_substituted.contains('.') {
+        if expected_substituted.contains('^')
+            || expected_substituted.contains('$')
+            || expected_substituted.contains('[')
+            || expected_substituted.contains('(')
+            || expected_substituted.contains('*')
+            || expected_substituted.contains('.')
+        {
             let regex_pattern = format!("(?s){}", expected_substituted); // (?s) enables DOTALL mode
             let regex = Regex::new(&regex_pattern)
                 .map_err(|e| Error::command_error(output_type, format!("Invalid regex: {}", e)))?;
@@ -331,8 +358,9 @@ impl TestEnvironment {
                 }
             } else {
                 let source_path = self.work_dir.join(source);
-                fs::read(&source_path)
-                    .map_err(|e| Error::command_error("cp", format!("Cannot read '{}': {}", source, e)))?
+                fs::read(&source_path).map_err(|e| {
+                    Error::command_error("cp", format!("Cannot read '{}': {}", source, e))
+                })?
             };
 
             // If dest exists and is a directory, copy into it
@@ -340,7 +368,8 @@ impl TestEnvironment {
                 let filename = if source == "stdout" || source == "stderr" {
                     source
                 } else {
-                    Path::new(source).file_name()
+                    Path::new(source)
+                        .file_name()
                         .and_then(|n| n.to_str())
                         .unwrap_or(source)
                 };
@@ -373,11 +402,18 @@ impl TestEnvironment {
         let dest_path = self.work_dir.join(dest);
 
         if !source_path.exists() {
-            return Err(Error::command_error("mv", format!("Source '{}' does not exist", source)));
+            return Err(Error::command_error(
+                "mv",
+                format!("Source '{}' does not exist", source),
+            ));
         }
 
-        fs::rename(&source_path, &dest_path)
-            .map_err(|e| Error::command_error("mv", format!("Cannot move '{}' to '{}': {}", source, dest, e)))?;
+        fs::rename(&source_path, &dest_path).map_err(|e| {
+            Error::command_error(
+                "mv",
+                format!("Cannot move '{}' to '{}': {}", source, dest, e),
+            )
+        })?;
 
         Ok(())
     }
@@ -408,8 +444,9 @@ impl TestEnvironment {
             }
         } else {
             let file_path = self.work_dir.join(filename);
-            fs::read(&file_path)
-                .map_err(|e| Error::command_error("stdin", format!("Cannot read '{}': {}", filename, e)))?
+            fs::read(&file_path).map_err(|e| {
+                Error::command_error("stdin", format!("Cannot read '{}': {}", filename, e))
+            })?
         };
 
         self.next_stdin = Some(content);
@@ -425,7 +462,10 @@ impl TestEnvironment {
             let _ = child.wait()?; // Reap the process
             Ok(())
         } else {
-            Err(Error::command_error("kill", format!("No background process named '{}'", name)))
+            Err(Error::command_error(
+                "kill",
+                format!("No background process named '{}'", name),
+            ))
         }
     }
 
@@ -434,11 +474,13 @@ impl TestEnvironment {
         let path1 = self.work_dir.join(file1);
         let path2 = self.work_dir.join(file2);
 
-        let contents1 = fs::read_to_string(&path1)
-            .map_err(|e| Error::command_error("cmpenv", format!("Cannot read '{}': {}", file1, e)))?;
+        let contents1 = fs::read_to_string(&path1).map_err(|e| {
+            Error::command_error("cmpenv", format!("Cannot read '{}': {}", file1, e))
+        })?;
 
-        let contents2_raw = fs::read_to_string(&path2)
-            .map_err(|e| Error::command_error("cmpenv", format!("Cannot read '{}': {}", file2, e)))?;
+        let contents2_raw = fs::read_to_string(&path2).map_err(|e| {
+            Error::command_error("cmpenv", format!("Cannot read '{}': {}", file2, e))
+        })?;
 
         // Substitute environment variables in file2
         let contents2 = self.substitute_env_vars(&contents2_raw);
@@ -462,8 +504,8 @@ impl TestEnvironment {
         // Handle $VAR and ${VAR} patterns
         for (key, value) in &self.env_vars {
             let patterns = [
-                format!("${{{}}}", key),  // ${VAR}
-                format!("${}", key),      // $VAR (but be careful with word boundaries)
+                format!("${{{}}}", key), // ${VAR}
+                format!("${}", key),     // $VAR (but be careful with word boundaries)
             ];
 
             for pattern in &patterns {
@@ -489,26 +531,44 @@ impl TestEnvironment {
         {
             use std::os::unix::fs::PermissionsExt;
             let mut perms = fs::metadata(&file_path)
-                .map_err(|e| Error::command_error("chmod", format!("Cannot get metadata for '{}': {}", file, e)))?
+                .map_err(|e| {
+                    Error::command_error(
+                        "chmod",
+                        format!("Cannot get metadata for '{}': {}", file, e),
+                    )
+                })?
                 .permissions();
             perms.set_mode(mode_int);
-            fs::set_permissions(&file_path, perms)
-                .map_err(|e| Error::command_error("chmod", format!("Cannot set permissions for '{}': {}", file, e)))?;
+            fs::set_permissions(&file_path, perms).map_err(|e| {
+                Error::command_error(
+                    "chmod",
+                    format!("Cannot set permissions for '{}': {}", file, e),
+                )
+            })?;
         }
 
         #[cfg(windows)]
         {
             // On Windows, we can only set read-only status
             let mut perms = fs::metadata(&file_path)
-                .map_err(|e| Error::command_error("chmod", format!("Cannot get metadata for '{}': {}", file, e)))?
+                .map_err(|e| {
+                    Error::command_error(
+                        "chmod",
+                        format!("Cannot get metadata for '{}': {}", file, e),
+                    )
+                })?
                 .permissions();
 
             // If mode doesn't include write permissions for owner (e.g., 444), make it read-only
             let readonly = (mode_int & 0o200) == 0;
             perms.set_readonly(readonly);
 
-            fs::set_permissions(&file_path, perms)
-                .map_err(|e| Error::command_error("chmod", format!("Cannot set permissions for '{}': {}", file, e)))?;
+            fs::set_permissions(&file_path, perms).map_err(|e| {
+                Error::command_error(
+                    "chmod",
+                    format!("Cannot set permissions for '{}': {}", file, e),
+                )
+            })?;
         }
 
         Ok(())
@@ -518,19 +578,19 @@ impl TestEnvironment {
     pub fn unquote_file(&self, file: &str) -> Result<()> {
         let file_path = self.work_dir.join(file);
 
-        let contents = fs::read_to_string(&file_path)
-            .map_err(|e| Error::command_error("unquote", format!("Cannot read '{}': {}", file, e)))?;
+        let contents = fs::read_to_string(&file_path).map_err(|e| {
+            Error::command_error("unquote", format!("Cannot read '{}': {}", file, e))
+        })?;
 
         let unquoted_contents: String = contents
             .lines()
-            .map(|line| {
-                line.strip_prefix('>').unwrap_or(line)
-            })
+            .map(|line| line.strip_prefix('>').unwrap_or(line))
             .collect::<Vec<&str>>()
             .join("\n");
 
-        fs::write(&file_path, unquoted_contents)
-            .map_err(|e| Error::command_error("unquote", format!("Cannot write '{}': {}", file, e)))?;
+        fs::write(&file_path, unquoted_contents).map_err(|e| {
+            Error::command_error("unquote", format!("Cannot write '{}': {}", file, e))
+        })?;
 
         Ok(())
     }
@@ -545,8 +605,9 @@ impl TestEnvironment {
 
         for file in files {
             let file_path = self.work_dir.join(file);
-            let contents = fs::read_to_string(&file_path)
-                .map_err(|e| Error::command_error("grep", format!("Cannot read '{}': {}", file, e)))?;
+            let contents = fs::read_to_string(&file_path).map_err(|e| {
+                Error::command_error("grep", format!("Cannot read '{}': {}", file, e))
+            })?;
 
             for (line_num, line) in contents.lines().enumerate() {
                 if regex.is_match(line) {
@@ -644,8 +705,11 @@ fn execute_command(env: &mut TestEnvironment, command: &Command, params: &RunPar
 
     if command.negated {
         match result {
-            Ok(_) => Err(Error::command_error(&command.name, "Command was expected to fail but succeeded")),
-            Err(_) => Ok(()),  // Negated command failed as expected
+            Ok(_) => Err(Error::command_error(
+                &command.name,
+                "Command was expected to fail but succeeded",
+            )),
+            Err(_) => Ok(()), // Negated command failed as expected
         }
     } else {
         result
@@ -653,17 +717,29 @@ fn execute_command(env: &mut TestEnvironment, command: &Command, params: &RunPar
 }
 
 /// Inner command execution logic
-fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &RunParams) -> Result<()> {
+fn execute_command_inner(
+    env: &mut TestEnvironment,
+    command: &Command,
+    params: &RunParams,
+) -> Result<()> {
     // Check condition if present
     if let Some(ref condition) = command.condition {
-        let condition_met = params.conditions.get(condition).copied().unwrap_or_else(|| {
-            // If condition starts with !, check for negation
-            if let Some(base_condition) = condition.strip_prefix('!') {
-                !params.conditions.get(base_condition).copied().unwrap_or(false)
-            } else {
-                false
-            }
-        });
+        let condition_met = params
+            .conditions
+            .get(condition)
+            .copied()
+            .unwrap_or_else(|| {
+                // If condition starts with !, check for negation
+                if let Some(base_condition) = condition.strip_prefix('!') {
+                    !params
+                        .conditions
+                        .get(base_condition)
+                        .copied()
+                        .unwrap_or(false)
+                } else {
+                    false
+                }
+            });
 
         if !condition_met {
             return Ok(()); // Skip this command
@@ -697,10 +773,12 @@ fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     return Err(Error::command_error(
                         "exec",
-                        format!("Command '{}' failed with exit code {}: {}",
-                               cmd,
-                               output.status.code().unwrap_or(-1),
-                               stderr.trim())
+                        format!(
+                            "Command '{}' failed with exit code {}: {}",
+                            cmd,
+                            output.status.code().unwrap_or(-1),
+                            stderr.trim()
+                        ),
                     ));
                 }
             }
@@ -713,13 +791,19 @@ fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &
         }
         "cmpenv" => {
             if command.args.len() != 2 {
-                return Err(Error::command_error("cmpenv", "Expected exactly 2 arguments"));
+                return Err(Error::command_error(
+                    "cmpenv",
+                    "Expected exactly 2 arguments",
+                ));
             }
             env.compare_files_with_env(&command.args[0], &command.args[1])?;
         }
         "stdout" | "stderr" => {
             if command.args.len() != 1 {
-                return Err(Error::command_error(&command.name, "Expected exactly 1 argument"));
+                return Err(Error::command_error(
+                    &command.name,
+                    "Expected exactly 1 argument",
+                ));
             }
 
             let expected = &command.args[0];
@@ -752,13 +836,19 @@ fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &
         }
         "exists" => {
             if command.args.is_empty() {
-                return Err(Error::command_error("exists", "Expected at least 1 argument"));
+                return Err(Error::command_error(
+                    "exists",
+                    "Expected at least 1 argument",
+                ));
             }
 
             // Check for -readonly flag
             let (check_readonly, files) = if command.args[0] == "-readonly" {
                 if command.args.len() < 2 {
-                    return Err(Error::command_error("exists", "Expected file argument after -readonly"));
+                    return Err(Error::command_error(
+                        "exists",
+                        "Expected file argument after -readonly",
+                    ));
                 }
                 (true, &command.args[1..])
             } else {
@@ -767,17 +857,26 @@ fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &
 
             for path in files {
                 if !env.file_exists(path) {
-                    return Err(Error::command_error("exists", format!("File '{}' does not exist", path)));
+                    return Err(Error::command_error(
+                        "exists",
+                        format!("File '{}' does not exist", path),
+                    ));
                 }
 
                 if check_readonly && !env.is_readonly(path) {
-                    return Err(Error::command_error("exists", format!("File '{}' is not read-only", path)));
+                    return Err(Error::command_error(
+                        "exists",
+                        format!("File '{}' is not read-only", path),
+                    ));
                 }
             }
         }
         "mkdir" => {
             if command.args.is_empty() {
-                return Err(Error::command_error("mkdir", "Expected at least 1 argument"));
+                return Err(Error::command_error(
+                    "mkdir",
+                    "Expected at least 1 argument",
+                ));
             }
             env.create_directories(&command.args)?;
         }
@@ -813,7 +912,10 @@ fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &
                         let value = &arg[eq_pos + 1..];
                         env.set_env_var(key, value);
                     } else {
-                        return Err(Error::command_error("env", format!("Invalid env format: {}", arg)));
+                        return Err(Error::command_error(
+                            "env",
+                            format!("Invalid env format: {}", arg),
+                        ));
                     }
                 }
             }
@@ -855,19 +957,28 @@ fn execute_command_inner(env: &mut TestEnvironment, command: &Command, params: &
         }
         "chmod" => {
             if command.args.len() != 2 {
-                return Err(Error::command_error("chmod", "Expected exactly 2 arguments"));
+                return Err(Error::command_error(
+                    "chmod",
+                    "Expected exactly 2 arguments",
+                ));
             }
             env.change_permissions(&command.args[0], &command.args[1])?;
         }
         "unquote" => {
             if command.args.len() != 1 {
-                return Err(Error::command_error("unquote", "Expected exactly 1 argument"));
+                return Err(Error::command_error(
+                    "unquote",
+                    "Expected exactly 1 argument",
+                ));
             }
             env.unquote_file(&command.args[0])?;
         }
         "grep" => {
             if command.args.len() < 2 {
-                return Err(Error::command_error("grep", "Expected at least 2 arguments"));
+                return Err(Error::command_error(
+                    "grep",
+                    "Expected at least 2 arguments",
+                ));
             }
             let pattern = &command.args[0];
             let files = &command.args[1..];

@@ -8,7 +8,7 @@
 
 use clap::{Parser, Subcommand};
 use std::fs;
-use std::io::{self, BufRead, BufReader};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 #[derive(Parser)]
@@ -76,7 +76,10 @@ impl std::str::FromStr for CountMode {
             "lines" | "line" | "l" => Ok(CountMode::Lines),
             "words" | "word" | "w" => Ok(CountMode::Words),
             "chars" | "char" | "c" => Ok(CountMode::Chars),
-            _ => Err(format!("Invalid count mode: {}. Use lines, words, or chars", s)),
+            _ => Err(format!(
+                "Invalid count mode: {}. Use lines, words, or chars",
+                s
+            )),
         }
     }
 }
@@ -86,7 +89,11 @@ fn main() {
 
     let result = match cli.command {
         Some(Commands::Count { mode, files }) => count_command(mode, files),
-        Some(Commands::Grep { pattern, files, ignore_case }) => grep_command(pattern, files, ignore_case),
+        Some(Commands::Grep {
+            pattern,
+            files,
+            ignore_case,
+        }) => grep_command(pattern, files, ignore_case),
         Some(Commands::Create { file, content }) => create_command(file, content),
         Some(Commands::Remove { files }) => remove_command(files),
         Some(Commands::List { dir }) => list_command(dir),
@@ -123,7 +130,11 @@ fn count_command(mode: CountMode, files: Vec<String>) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn grep_command(pattern: String, files: Vec<String>, ignore_case: bool) -> Result<(), Box<dyn std::error::Error>> {
+fn grep_command(
+    pattern: String,
+    files: Vec<String>,
+    ignore_case: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     if files.is_empty() {
         return Err("No files specified".into());
     }

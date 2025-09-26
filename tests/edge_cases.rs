@@ -67,7 +67,11 @@ nested content"#;
     fs::write(&script_path, script_content).unwrap();
 
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Special file names test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Special file names test failed: {:?}",
+        result
+    );
 }
 
 #[test]

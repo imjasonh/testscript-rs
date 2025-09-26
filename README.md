@@ -1,5 +1,7 @@
 # testscript-rs
 
+[![CI](https://github.com/imjasonh/testscript-rs/workflows/CI/badge.svg)](https://github.com/imjasonh/testscript-rs/actions)
+
 A Rust crate for testing command-line tools using filesystem-based script files.
 
 testscript-rs provides a framework for writing integration tests for CLI applications using the `.txtar` format, where test scripts and file contents are combined in a single file.
@@ -136,6 +138,12 @@ Test scripts use the `.txtar` format. For complete format documentation, see the
 - **grep** - Search files with regex
 
 Commands can be prefixed with conditions (`[unix]`) or negated (`!`).
+
+> Note: Some features of `testscript` in Go are not supported in this Rust port:
+> 
+> - `[gc]` for whether Go was built with gc
+> - `[gccgo]` for whether Go was built with gccgo
+> - `[go1.x]` for whether the Go version is 1.x or later
 
 ## Examples
 
