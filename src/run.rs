@@ -662,9 +662,12 @@ pub fn run_script(script_path: &Path, params: &RunParams) -> Result<()> {
     let script = crate::parser::parse(&content).map_err(|e| {
         // Enhance parse errors with script context
         match e {
-            Error::Parse { line, message } => {
-                Error::script_error(script_path.to_string_lossy().to_string(), line, &content, Error::Parse { line, message })
-            }
+            Error::Parse { line, message } => Error::script_error(
+                script_path.to_string_lossy().to_string(),
+                line,
+                &content,
+                Error::Parse { line, message },
+            ),
             other => other,
         }
     })?;
@@ -691,7 +694,12 @@ pub fn run_script(script_path: &Path, params: &RunParams) -> Result<()> {
     for command in &script.commands {
         if let Err(e) = execute_command(&mut env, command, params) {
             // Wrap error with script context
-            return Err(Error::script_error(&script_file, command.line_num, &content, e));
+            return Err(Error::script_error(
+                &script_file,
+                command.line_num,
+                &content,
+                e,
+            ));
         }
 
         // Check for early termination
