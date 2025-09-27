@@ -143,7 +143,7 @@ fn test_mixed_conditions() {
 [!windows] exec echo "not windows"
 exec echo "always runs"
 [linux] exec echo "linux only"
-[!nonexistent] exec echo "not nonexistent""#;
+[!release] exec echo "not release mode""#;
 
     fs::write(&script_path, script_content).unwrap();
 
