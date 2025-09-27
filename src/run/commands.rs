@@ -272,7 +272,7 @@ impl TestEnvironment {
     /// Create a symbolic link
     pub fn create_symlink(&self, target: &str, link_name: &str) -> Result<()> {
         let link_path = self.work_dir.join(link_name);
-        
+
         #[cfg(unix)]
         {
             // For Unix systems, preserve the target path as-is to support relative links

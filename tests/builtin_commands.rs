@@ -218,7 +218,11 @@ exec ls link_dir"#;
     fs::write(&script_path, script_content).unwrap();
 
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Directory symlink test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Directory symlink test failed: {:?}",
+        result
+    );
 }
 
 #[cfg(unix)]
@@ -240,7 +244,11 @@ relative content"#;
     fs::write(&script_path, script_content).unwrap();
 
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Relative path symlink test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Relative path symlink test failed: {:?}",
+        result
+    );
 }
 
 #[test]
