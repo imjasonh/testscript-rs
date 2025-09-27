@@ -12,13 +12,13 @@ pub mod run;
 
 pub use error::{Error, Result};
 pub use parser::{Command, Script, TxtarFile};
-pub use run::{CommandFn, SetupFn, TestEnvironment};
+pub use run::{CommandFn, RunParams, SetupFn, TestEnvironment};
 
 // Re-export for advanced users who need direct access
 pub use run::run_test;
 
 // Internal function used by the Builder - not part of public API
-fn run(params: &mut run::RunParams, test_data_glob: &str) -> Result<()> {
+fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
     use walkdir::WalkDir;
 
     // Simple glob pattern matching - for now just handle basic patterns like "testdata/*.txt"
@@ -98,7 +98,7 @@ fn run(params: &mut run::RunParams, test_data_glob: &str) -> Result<()> {
 /// ```
 pub struct Builder {
     dir: String,
-    params: run::RunParams,
+    params: RunParams,
 }
 
 impl Builder {
@@ -106,7 +106,7 @@ impl Builder {
     fn new(dir: impl Into<String>) -> Self {
         Self {
             dir: dir.into(),
-            params: run::RunParams::new(),
+            params: RunParams::new(),
         }
     }
 
