@@ -1,0 +1,16 @@
+# Test program detection conditions
+
+# Test that echo is available (should work on all platforms)
+[exec:echo] exec echo "echo command is available"
+[exec:echo] stdout "echo command is available"
+
+# Test negation for a program that shouldn't exist
+[!exec:nonexistent_program_xyz123] exec echo "nonexistent program not found"  
+[!exec:nonexistent_program_xyz123] stdout "nonexistent program not found"
+
+# Test built-in program detections that are set by default
+[exec:ls] exec echo "ls command detected"
+[exec:mkdir] exec echo "mkdir command detected"
+
+# At least mkdir should work since it's tested
+[exec:mkdir] stdout "mkdir command detected"

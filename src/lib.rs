@@ -71,15 +71,32 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///
 /// This provides a fluent interface for setting up and executing test scripts.
 ///
-/// # Examples
+/// ## Automatic Condition Detection
 ///
+/// The following conditions are automatically available without any setup:
+///
+/// - **Platform conditions**: `[unix]`, `[windows]`, `[linux]`, `[darwin]`, `[macos]`
+/// - **Network condition**: `[net]` - Tests network connectivity by pinging reliable hosts
+/// - **Build conditions**: `[debug]`, `[release]` - Based on compilation flags
+/// - **Program conditions**: `[exec:program]` - Checks if a program is available in PATH
+/// - **Environment conditions**: `[env:VAR]` - Dynamic checking of environment variables
+/// - **Program existence**: `[exec:program]` - Checks if a program is available in PATH
+/// - **Negation**: Use `!` to negate any condition, e.g. `[!windows]`, `[!env:CI]`, `[!exec:git]`
+///
+/// ## Examples
+///
+/// ### Basic Usage
 /// ```no_run
 /// use testscript_rs::testscript;
 ///
-/// // Simple usage
+/// // Simple usage - all conditions detected automatically
 /// testscript::run("testdata").execute().unwrap();
+/// ```
 ///
-/// // With customization
+/// ### With Custom Setup
+/// ```no_run
+/// use testscript_rs::testscript;
+///
 /// testscript::run("testdata")
 ///     .setup(|env| {
 ///         // Compile your CLI tool
@@ -93,8 +110,14 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///         // Custom command implementation
 ///         Ok(())
 ///     })
+///     .condition("custom", my_custom_check())
 ///     .execute()
 ///     .unwrap();
+///
+/// fn my_custom_check() -> bool {
+///     // Your custom condition logic
+///     true
+/// }
 /// ```
 pub struct Builder {
     dir: String,
@@ -134,7 +157,35 @@ impl Builder {
 
     /// Set a condition value for conditional command execution
     ///
-    /// Conditions can be used in test scripts like `[mycondition] exec echo hello`
+    /// Use this to add custom conditions beyond the built-in ones.
+    /// Many common conditions are automatically detected (see Builder docs for details).
+    ///
+    /// # Arguments
+    /// * `name` - The condition name (use in scripts as `[name]`)
+    /// * `value` - Whether the condition is met
+    ///
+    /// # Built-in Conditions (automatically available)
+    /// - `net` - Network connectivity
+    /// - `unix`, `windows`, `linux`, `darwin` - Platform detection
+    /// - `debug`, `release` - Build type  
+    /// - `exec:program` - Program availability (35+ programs)
+    /// - `env:VAR` - Environment variables (dynamic)
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use testscript_rs::testscript;
+    ///
+    /// testscript::run("testdata")
+    ///     .condition("feature_enabled", cfg!(feature = "advanced"))
+    ///     .condition("has_gpu", check_gpu_available())
+    ///     .execute()
+    ///     .unwrap();
+    ///
+    /// fn check_gpu_available() -> bool {
+    ///     // Your GPU detection logic
+    ///     false
+    /// }
+    /// ```
     pub fn condition(mut self, name: &str, value: bool) -> Self {
         self.params = self.params.condition(name, value);
         self

@@ -39,12 +39,8 @@ impl RunParams {
         conditions.insert("debug".to_string(), cfg!(debug_assertions));
         conditions.insert("release".to_string(), !cfg!(debug_assertions));
 
-        // Check for common programs
-        conditions.insert("exec:cat".to_string(), Self::program_exists("cat"));
-        conditions.insert("exec:echo".to_string(), Self::program_exists("echo"));
-        conditions.insert("exec:ls".to_string(), Self::program_exists("ls"));
-        conditions.insert("exec:mkdir".to_string(), Self::program_exists("mkdir"));
-        conditions.insert("exec:rm".to_string(), Self::program_exists("rm"));
+        // Add network condition - check if network is available by default
+        conditions.insert("net".to_string(), Self::check_network_available());
 
         // Check UPDATE_SCRIPTS environment variable
         let update_scripts = std::env::var("UPDATE_SCRIPTS")
@@ -86,13 +82,88 @@ impl RunParams {
         self
     }
 
-    /// Check if a program exists in PATH
-    fn program_exists(program: &str) -> bool {
-        std::process::Command::new("which")
+    /// Check if a program exists in PATH (cross-platform)
+    pub fn program_exists(program: &str) -> bool {
+        // TODO: Consider caching results for performance if needed
+
+        // Use different commands based on platform
+        #[cfg(windows)]
+        let check_cmd = "where";
+        #[cfg(not(windows))]
+        let check_cmd = "which";
+
+        std::process::Command::new(check_cmd)
             .arg(program)
             .output()
             .map(|output| output.status.success())
             .unwrap_or(false)
+    }
+
+    /// Check if network is available by attempting to reach a reliable host
+    fn check_network_available() -> bool {
+        // In CI environments, network checks can be flaky or restricted
+        // Use a shorter timeout and more defensive approach
+
+        // Try a quick TCP connection first (faster than ping in many environments)
+        if Self::check_network_tcp() {
+            return true;
+        }
+
+        // Fallback to ping with shorter timeout
+        Self::check_network_ping()
+    }
+
+    /// Check network via TCP connection (faster and more reliable in CI)
+    fn check_network_tcp() -> bool {
+        use std::net::{TcpStream, ToSocketAddrs};
+        use std::time::Duration;
+
+        // Try to connect to DNS servers on port 53 (usually allowed in CI)
+        let addresses = ["1.1.1.1:53", "8.8.8.8:53"];
+
+        for addr in &addresses {
+            if let Ok(mut socket_addrs) = addr.to_socket_addrs() {
+                if let Some(socket_addr) = socket_addrs.next() {
+                    // Use a very short timeout for CI compatibility
+                    if TcpStream::connect_timeout(&socket_addr, Duration::from_millis(500)).is_ok()
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Fallback network check using ping
+    fn check_network_ping() -> bool {
+        let test_hosts = ["1.1.1.1"]; // Just try one host to be faster
+
+        for host in &test_hosts {
+            let result = std::process::Command::new("ping")
+                .args(if cfg!(windows) {
+                    vec!["-n", "1", "-w", "500", host] // Shorter timeout
+                } else {
+                    vec!["-c", "1", "-W", "1", host]
+                })
+                .output();
+
+            if let Ok(output) = result {
+                if output.status.success() {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// Check environment variable condition
+    pub fn check_env_condition(condition: &str) -> bool {
+        if let Some(env_var) = condition.strip_prefix("env:") {
+            std::env::var(env_var).is_ok()
+        } else {
+            false
+        }
     }
 }
 

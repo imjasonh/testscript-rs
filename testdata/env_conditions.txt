@@ -1,0 +1,19 @@
+# Test environment variable conditions
+
+# Set an env var in the test
+env TEST_VAR=hello
+
+# This should execute since TEST_VAR is now set
+[env:TEST_VAR] exec echo "Environment variable TEST_VAR is set"
+[env:TEST_VAR] stdout "Environment variable TEST_VAR is set"
+
+# This should be skipped since MISSING_VAR is not set
+[env:MISSING_VAR] exec echo "This should not appear"
+
+# This should execute since MISSING_VAR is not set (negated condition)
+[!env:MISSING_VAR] exec echo "MISSING_VAR is not set (as expected)"
+[!env:MISSING_VAR] stdout "MISSING_VAR is not set (as expected)"
+
+# Test PATH environment variable which should exist on all systems
+[env:PATH] exec echo "PATH environment variable exists"
+[env:PATH] stdout "PATH environment variable exists"
