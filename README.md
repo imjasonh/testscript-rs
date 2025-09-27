@@ -1,6 +1,6 @@
 # testscript-rs
 
-[![CI](https://github.com/imjasonh/testscript-rs/workflows/CI/badge.svg)](https://github.com/imjasonh/testscript-rs/actions)
+[![CI](https://github.com/imjasonh/testscript-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/imjasonh/testscript-rs/actions/workflows/ci.yml)
 ![Crates.io](https://img.shields.io/crates/v/testscript-rs)
 
 A Rust crate for testing command-line tools using filesystem-based script files.
