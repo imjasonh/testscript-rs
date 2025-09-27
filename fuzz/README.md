@@ -128,6 +128,22 @@ cargo fuzz run parser artifacts/parser/crash-<hash>
 
 ## Integration with CI
 
+### GitHub Actions Workflow
+
+A dedicated fuzzing workflow runs:
+- **Daily at 2 AM UTC** (scheduled)
+- **On demand** via `workflow_dispatch`
+
+The workflow runs all 4 fuzz targets for 5 minutes each by default, with configurable duration and run counts. Any crashes are automatically uploaded as artifacts.
+
+**Manual trigger:**
+1. Go to Actions tab in GitHub
+2. Select "Fuzz Testing" workflow  
+3. Click "Run workflow" 
+4. Optionally adjust duration/runs parameters
+
+### Local CI Testing
+
 For CI environments, run bounded fuzzing:
 
 ```bash

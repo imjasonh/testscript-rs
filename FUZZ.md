@@ -58,6 +58,10 @@ Done 1000 runs in 1 second(s)
 
 No crashes = success! 🎉
 
+## GitHub Actions Integration
+
+A dedicated fuzzing workflow runs daily at 2 AM UTC and can be triggered manually via GitHub Actions. This provides continuous security testing for the parser.
+
 ## Switch Back to Stable
 
 ```bash
