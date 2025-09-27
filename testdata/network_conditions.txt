@@ -1,0 +1,11 @@
+# Test network condition support
+
+# This command will only run if network is available
+[net] exec echo "Network is available"
+
+# This command will only run if network is not available  
+[!net] exec echo "Network is not available"
+
+# At least one of the above should execute, so we should see some output
+exec echo "Network test completed"
+stdout "Network test completed"

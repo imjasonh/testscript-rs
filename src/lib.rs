@@ -79,7 +79,7 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 /// // Simple usage
 /// testscript::run("testdata").execute().unwrap();
 ///
-/// // With customization
+/// // With customization and advanced conditions
 /// testscript::run("testdata")
 ///     .setup(|env| {
 ///         // Compile your CLI tool
@@ -93,8 +93,28 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///         // Custom command implementation
 ///         Ok(())
 ///     })
+///     .condition("net", check_network_available())
+///     .condition("docker", command_exists("docker"))
+///     .condition("env:CI", std::env::var("CI").is_ok())
 ///     .execute()
 ///     .unwrap();
+///
+/// // Auto-detect network and programs
+/// testscript::run("testdata")
+///     .auto_detect_network()
+///     .auto_detect_programs(&["docker", "git", "npm"])
+///     .execute()
+///     .unwrap();
+///
+/// fn check_network_available() -> bool {
+///     // Your network check implementation
+///     true
+/// }
+///
+/// fn command_exists(cmd: &str) -> bool {
+///     // Your command existence check
+///     false
+/// }
 /// ```
 pub struct Builder {
     dir: String,
@@ -146,6 +166,37 @@ impl Builder {
     /// will be updated with the actual command output.
     pub fn update_scripts(mut self, update: bool) -> Self {
         self.params = self.params.update_scripts(update);
+        self
+    }
+
+    /// Automatically detect network availability and set the 'net' condition
+    ///
+    /// This will attempt to ping reliable hosts to determine if network
+    /// connectivity is available and set the condition accordingly.
+    pub fn auto_detect_network(mut self) -> Self {
+        self.params = self.params.auto_detect_network();
+        self
+    }
+
+    /// Automatically detect availability of specified programs
+    ///
+    /// This will check if the given programs are available in PATH and
+    /// set conditions like `exec:program` for each one.
+    ///
+    /// # Arguments
+    /// * `programs` - Slice of program names to check for
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use testscript_rs::testscript;
+    ///
+    /// testscript::run("testdata")
+    ///     .auto_detect_programs(&["docker", "git", "npm"])
+    ///     .execute()
+    ///     .unwrap();
+    /// ```
+    pub fn auto_detect_programs(mut self, programs: &[&str]) -> Self {
+        self.params = self.params.auto_detect_programs(programs);
         self
     }
 
