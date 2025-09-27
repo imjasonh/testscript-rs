@@ -79,11 +79,10 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 /// - **Platform conditions**: `[unix]`, `[windows]`, `[linux]`, `[darwin]`, `[macos]`
 /// - **Network condition**: `[net]` - Tests network connectivity by pinging reliable hosts
 /// - **Build conditions**: `[debug]`, `[release]` - Based on compilation flags
-/// - **Program conditions**: `[exec:program]` - Detects 35+ common programs including:
-///   - Basic tools: cat, echo, ls, mkdir, rm, cp, mv, chmod, pwd, grep, find
-///   - Development: git, make, cmake, docker, node, npm, python, go, cargo, rustc
-///   - Archive: tar, gzip, zip, curl, wget, ssh, diff
-///   - System: ps, kill, sleep, true, false, sh, bash, zsh
+/// - **Program conditions**: `[exec:program]` - Detects 15+ common programs including:
+///   - Basic tools: cat, echo, ls, mkdir, rm, cp, mv, grep, find
+///   - Development: git, make, curl, python, node, docker  
+///   - System: sleep, true, false, sh
 /// - **Environment conditions**: `[env:VAR]` - Dynamic checking of environment variables
 ///
 /// ## Examples

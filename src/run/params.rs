@@ -42,9 +42,9 @@ impl RunParams {
         // Add network condition - check if network is available by default
         conditions.insert("net".to_string(), Self::check_network_available());
 
-        // Check for common programs - comprehensive set like Go testscript
+        // Check for common programs - optimized set for better CI performance
         let common_programs = [
-            // Basic Unix/Windows commands
+            // Essential Unix/Windows commands (most likely to exist)
             "cat",
             "echo",
             "ls",
@@ -52,58 +52,20 @@ impl RunParams {
             "rm",
             "cp",
             "mv",
-            "chmod",
-            "pwd",
-            "cd",
             "grep",
-            "sed",
-            "awk",
-            "sort",
-            "uniq",
-            "head",
-            "tail",
-            "wc",
             "find",
-            "tar",
-            "gzip",
-            "gunzip",
-            "zip",
-            "unzip",
-            // Development tools
+            // Core development tools that are commonly available
             "git",
             "make",
-            "cmake",
-            "docker",
-            "node",
-            "npm",
-            "yarn",
-            "python",
-            "python3",
-            "pip",
-            "pip3",
-            "go",
-            "cargo",
-            "rustc",
-            "java",
-            "javac",
-            "mvn",
-            "gradle",
-            // Build/test tools
             "curl",
-            "wget",
-            "ssh",
-            "rsync",
-            "diff",
-            "patch",
-            // Platform-specific variations
-            "sh",
-            "bash",
-            "zsh",
-            "ps",
-            "kill",
+            "python",
+            "node",
+            "docker",
+            // System tools
             "sleep",
             "true",
             "false",
+            "sh",
             // Test programs (for testing purposes - these likely don't exist)
             "nonexistent_rare_program_xyz123",
         ];
@@ -170,20 +132,55 @@ impl RunParams {
 
     /// Check if network is available by attempting to reach a reliable host
     fn check_network_available() -> bool {
-        // Try multiple reliable hosts to increase reliability
-        let test_hosts = ["1.1.1.1", "8.8.8.8", "9.9.9.9"];
+        // In CI environments, network checks can be flaky or restricted
+        // Use a shorter timeout and more defensive approach
+
+        // Try a quick TCP connection first (faster than ping in many environments)
+        if Self::check_network_tcp() {
+            return true;
+        }
+
+        // Fallback to ping with shorter timeout
+        Self::check_network_ping()
+    }
+
+    /// Check network via TCP connection (faster and more reliable in CI)
+    fn check_network_tcp() -> bool {
+        use std::net::{TcpStream, ToSocketAddrs};
+        use std::time::Duration;
+
+        // Try to connect to DNS servers on port 53 (usually allowed in CI)
+        let addresses = ["1.1.1.1:53", "8.8.8.8:53"];
+
+        for addr in &addresses {
+            if let Ok(mut socket_addrs) = addr.to_socket_addrs() {
+                if let Some(socket_addr) = socket_addrs.next() {
+                    // Use a very short timeout for CI compatibility
+                    if TcpStream::connect_timeout(&socket_addr, Duration::from_millis(500)).is_ok()
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Fallback network check using ping
+    fn check_network_ping() -> bool {
+        let test_hosts = ["1.1.1.1"]; // Just try one host to be faster
 
         for host in &test_hosts {
-            let output = std::process::Command::new("ping")
+            let result = std::process::Command::new("ping")
                 .args(if cfg!(windows) {
-                    vec!["-n", "1", "-w", "1000", host]
+                    vec!["-n", "1", "-w", "500", host] // Shorter timeout
                 } else {
                     vec!["-c", "1", "-W", "1", host]
                 })
                 .output();
 
-            if let Ok(result) = output {
-                if result.status.success() {
+            if let Ok(output) = result {
+                if output.status.success() {
                     return true;
                 }
             }
