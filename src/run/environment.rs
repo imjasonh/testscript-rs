@@ -305,10 +305,8 @@ impl TestEnvironment {
     /// Preserve the work directory by preventing TempDir cleanup
     /// Returns the path to the preserved directory
     pub fn preserve_work_dir(self) -> std::path::PathBuf {
-        let work_dir = self.work_dir.clone();
-        // Leak the TempDir to prevent cleanup
-        std::mem::forget(self._temp_dir);
-        work_dir
+        // Use the idiomatic way to preserve a TempDir
+        self._temp_dir.keep()
     }
 }
 
