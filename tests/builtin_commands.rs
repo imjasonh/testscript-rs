@@ -181,3 +181,28 @@ hello from stdout"#;
     let result = run_test(&script_path);
     assert!(result.is_ok(), "CP stdout test failed: {:?}", result);
 }
+
+#[test]
+fn test_symlink_command() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_test.txt");
+
+    let script_content = r#"# Test symlink command
+symlink original.txt link.txt
+exists link.txt
+exec cat link.txt
+stdout "original content"
+
+# Test symlink with directory
+mkdir test_dir
+symlink test_dir dir_link
+exists dir_link
+
+-- original.txt --
+original content"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Symlink test failed: {:?}", result);
+}
