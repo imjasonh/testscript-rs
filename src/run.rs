@@ -647,6 +647,55 @@ impl TestEnvironment {
             false
         }
     }
+
+    /// Create a symbolic link
+    pub fn create_symlink(&self, target: &str, link_name: &str) -> Result<()> {
+        let target_path = self.work_dir.join(target);
+        let link_path = self.work_dir.join(link_name);
+
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&target_path, &link_path).map_err(|e| {
+                Error::command_error(
+                    "symlink",
+                    format!(
+                        "Cannot create symlink '{}' -> '{}': {}",
+                        link_name, target, e
+                    ),
+                )
+            })?;
+        }
+
+        #[cfg(windows)]
+        {
+            // On Windows, try to create a symlink but fall back gracefully
+            use std::os::windows::fs::symlink_file;
+
+            if target_path.is_file() {
+                symlink_file(&target_path, &link_path).map_err(|e| {
+                    Error::command_error(
+                        "symlink",
+                        format!("Cannot create symlink '{}' -> '{}': {} (Note: Windows symlinks may require administrator privileges)", link_name, target, e),
+                    )
+                })?;
+            } else {
+                return Err(Error::command_error(
+                    "symlink",
+                    "Symlinks on Windows are only supported for files, not directories",
+                ));
+            }
+        }
+
+        #[cfg(not(any(unix, windows)))]
+        {
+            return Err(Error::command_error(
+                "symlink",
+                "Symlinks are not supported on this platform",
+            ));
+        }
+
+        Ok(())
+    }
 }
 
 /// Run a single test script
@@ -746,22 +795,22 @@ fn execute_command_inner(
 ) -> Result<()> {
     // Check condition if present
     if let Some(ref condition) = command.condition {
-        let condition_met = params
-            .conditions
-            .get(condition)
-            .copied()
-            .unwrap_or_else(|| {
-                // If condition starts with !, check for negation
-                if let Some(base_condition) = condition.strip_prefix('!') {
-                    !params
-                        .conditions
-                        .get(base_condition)
-                        .copied()
-                        .unwrap_or(false)
-                } else {
-                    false
-                }
+        let condition_met = if let Some(value) = params.conditions.get(condition) {
+            *value
+        } else if let Some(base_condition) = condition.strip_prefix('!') {
+            // Handle negated conditions
+            if let Some(value) = params.conditions.get(base_condition) {
+                !value
+            } else {
+                return Err(Error::UnknownCondition {
+                    condition: base_condition.to_string(),
+                });
+            }
+        } else {
+            return Err(Error::UnknownCondition {
+                condition: condition.clone(),
             });
+        };
 
         if !condition_met {
             return Ok(()); // Skip this command
@@ -985,6 +1034,15 @@ fn execute_command_inner(
                 ));
             }
             env.change_permissions(&command.args[0], &command.args[1])?;
+        }
+        "symlink" => {
+            if command.args.len() != 2 {
+                return Err(Error::command_error(
+                    "symlink",
+                    "Expected exactly 2 arguments: target link_name",
+                ));
+            }
+            env.create_symlink(&command.args[0], &command.args[1])?;
         }
         "unquote" => {
             if command.args.len() != 1 {

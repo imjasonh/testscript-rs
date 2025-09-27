@@ -181,3 +181,59 @@ hello from stdout"#;
     let result = run_test(&script_path);
     assert!(result.is_ok(), "CP stdout test failed: {:?}", result);
 }
+
+#[test]
+fn test_symlink_command() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_test.txt");
+
+    let script_content = r#"# Test symlink command
+symlink target.txt link.txt
+exists link.txt
+exists target.txt
+
+# Test that symlink content matches target
+exec cat link.txt
+stdout "target content"
+
+-- target.txt --
+target content"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+
+    #[cfg(unix)]
+    {
+        assert!(
+            result.is_ok(),
+            "Symlink test should pass on Unix: {:?}",
+            result
+        );
+    }
+
+    #[cfg(windows)]
+    {
+        // On Windows, symlinks usually fail due to permissions
+        if result.is_ok() {
+            panic!(
+                "Symlink test unexpectedly passed on Windows - this suggests elevated privileges"
+            );
+        } else {
+            // Expected failure on Windows
+            let error_msg = result.unwrap_err().to_string();
+            assert!(error_msg.contains("symlink"));
+        }
+    }
+
+    #[cfg(not(any(unix, windows)))]
+    {
+        // On other platforms, should fail gracefully
+        assert!(
+            result.is_err(),
+            "Symlink should fail on unsupported platforms"
+        );
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("not supported"));
+    }
+}

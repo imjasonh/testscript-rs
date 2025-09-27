@@ -143,7 +143,7 @@ fn test_mixed_conditions() {
 [!windows] exec echo "not windows"
 exec echo "always runs"
 [linux] exec echo "linux only"
-[!nonexistent] exec echo "not nonexistent""#;
+[!release] exec echo "not release mode""#;
 
     fs::write(&script_path, script_content).unwrap();
 
@@ -165,4 +165,25 @@ cmp file1.txt file2.txt
 
     let result = run_test(&script_path);
     assert!(result.is_err(), "Empty exec command should fail");
+}
+
+#[test]
+fn test_unknown_condition_error() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("unknown_condition.txt");
+
+    let script_content = r#"# Test unknown condition
+[nonexistent_condition] exec echo "should not run"
+exec echo "this should run""#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_err(), "Should fail with unknown condition");
+
+    let error_msg = result.unwrap_err().to_string();
+    // With enhanced error messages, the UnknownCondition gets wrapped in script context
+    assert!(error_msg.contains("unknown_condition.txt"));
+    assert!(error_msg.contains("nonexistent_condition"));
+    assert!(error_msg.contains("line 2"));
 }

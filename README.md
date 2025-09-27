@@ -137,6 +137,7 @@ Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-interna
 - **stop** - Stop test early (pass)
 - **unquote** - Remove leading `>` from file lines
 - **grep** - Search files with regex
+- **symlink** - Create symbolic links (Unix/Linux/macOS)
 
 Commands can be prefixed with conditions (`[unix]`) or negated (`!`).
 
