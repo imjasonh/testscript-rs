@@ -3,11 +3,8 @@
 use testscript_rs::testscript;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Example 1: Basic usage with auto-detection
-    testscript::run("testdata")
-        .auto_detect_network()
-        .auto_detect_programs(&["docker", "git", "npm", "echo"])
-        .execute()?;
+    // Example 1: Basic usage - all conditions detected automatically
+    testscript::run("testdata").execute()?;
 
     // Example 2: Manual condition setting with environment variables
 

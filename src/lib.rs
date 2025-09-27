@@ -99,10 +99,8 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///     .execute()
 ///     .unwrap();
 ///
-/// // Auto-detect network and programs
+/// // Basic usage - all common conditions detected automatically
 /// testscript::run("testdata")
-///     .auto_detect_network()
-///     .auto_detect_programs(&["docker", "git", "npm"])
 ///     .execute()
 ///     .unwrap();
 ///
@@ -166,40 +164,6 @@ impl Builder {
     /// will be updated with the actual command output.
     pub fn update_scripts(mut self, update: bool) -> Self {
         self.params = self.params.update_scripts(update);
-        self
-    }
-
-    /// Re-detect network availability and update the 'net' condition
-    ///
-    /// The 'net' condition is automatically checked at startup, but this method
-    /// can be used to refresh the network status if needed.
-    ///
-    /// This will attempt to ping reliable hosts to determine if network
-    /// connectivity is available and update the condition accordingly.
-    pub fn auto_detect_network(mut self) -> Self {
-        self.params = self.params.auto_detect_network();
-        self
-    }
-
-    /// Automatically detect availability of specified programs
-    ///
-    /// This will check if the given programs are available in PATH and
-    /// set conditions like `exec:program` for each one.
-    ///
-    /// # Arguments
-    /// * `programs` - Slice of program names to check for
-    ///
-    /// # Examples
-    /// ```no_run
-    /// use testscript_rs::testscript;
-    ///
-    /// testscript::run("testdata")
-    ///     .auto_detect_programs(&["docker", "git", "npm"])
-    ///     .execute()
-    ///     .unwrap();
-    /// ```
-    pub fn auto_detect_programs(mut self, programs: &[&str]) -> Self {
-        self.params = self.params.auto_detect_programs(programs);
         self
     }
 

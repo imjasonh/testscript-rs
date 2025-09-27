@@ -42,12 +42,76 @@ impl RunParams {
         // Add network condition - check if network is available by default
         conditions.insert("net".to_string(), Self::check_network_available());
 
-        // Check for common programs
-        conditions.insert("exec:cat".to_string(), Self::program_exists("cat"));
-        conditions.insert("exec:echo".to_string(), Self::program_exists("echo"));
-        conditions.insert("exec:ls".to_string(), Self::program_exists("ls"));
-        conditions.insert("exec:mkdir".to_string(), Self::program_exists("mkdir"));
-        conditions.insert("exec:rm".to_string(), Self::program_exists("rm"));
+        // Check for common programs - comprehensive set like Go testscript
+        let common_programs = [
+            // Basic Unix/Windows commands
+            "cat",
+            "echo",
+            "ls",
+            "mkdir",
+            "rm",
+            "cp",
+            "mv",
+            "chmod",
+            "pwd",
+            "cd",
+            "grep",
+            "sed",
+            "awk",
+            "sort",
+            "uniq",
+            "head",
+            "tail",
+            "wc",
+            "find",
+            "tar",
+            "gzip",
+            "gunzip",
+            "zip",
+            "unzip",
+            // Development tools
+            "git",
+            "make",
+            "cmake",
+            "docker",
+            "node",
+            "npm",
+            "yarn",
+            "python",
+            "python3",
+            "pip",
+            "pip3",
+            "go",
+            "cargo",
+            "rustc",
+            "java",
+            "javac",
+            "mvn",
+            "gradle",
+            // Build/test tools
+            "curl",
+            "wget",
+            "ssh",
+            "rsync",
+            "diff",
+            "patch",
+            // Platform-specific variations
+            "sh",
+            "bash",
+            "zsh",
+            "ps",
+            "kill",
+            "sleep",
+            "true",
+            "false",
+            // Test programs (for testing purposes - these likely don't exist)
+            "nonexistent_rare_program_xyz123",
+        ];
+
+        for program in &common_programs {
+            let condition_name = format!("exec:{}", program);
+            conditions.insert(condition_name, Self::program_exists(program));
+        }
 
         // Check UPDATE_SCRIPTS environment variable
         let update_scripts = std::env::var("UPDATE_SCRIPTS")
@@ -86,26 +150,6 @@ impl RunParams {
     /// Set whether to update scripts with actual output
     pub fn update_scripts(mut self, update: bool) -> Self {
         self.update_scripts = update;
-        self
-    }
-
-    /// Re-detect network availability and update the 'net' condition
-    ///
-    /// The 'net' condition is automatically checked at startup, but this method
-    /// can be used to refresh the network status if needed.
-    pub fn auto_detect_network(mut self) -> Self {
-        self.conditions
-            .insert("net".to_string(), Self::check_network_available());
-        self
-    }
-
-    /// Automatically detect availability of specified programs
-    pub fn auto_detect_programs(mut self, programs: &[&str]) -> Self {
-        for program in programs {
-            let condition_name = format!("exec:{}", program);
-            self.conditions
-                .insert(condition_name, Self::program_exists(program));
-        }
         self
     }
 

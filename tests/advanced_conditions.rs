@@ -37,7 +37,7 @@ stdout "negated env condition works"
 }
 
 #[test]
-fn test_auto_detect_network() {
+fn test_network_condition_builtin() {
     let temp_dir = TempDir::new().unwrap();
     let testdata_dir = temp_dir.path().join("testdata");
     fs::create_dir(&testdata_dir).unwrap();
@@ -53,9 +53,8 @@ stdout "test completed"
 
     fs::write(testdata_dir.join("network_test.txt"), test_content).unwrap();
 
-    let result = testscript::run(testdata_dir.to_string_lossy())
-        .auto_detect_network()
-        .execute();
+    // Network condition should be available automatically
+    let result = testscript::run(testdata_dir.to_string_lossy()).execute();
     assert!(
         result.is_ok(),
         "Network condition test failed: {:?}",
@@ -64,24 +63,24 @@ stdout "test completed"
 }
 
 #[test]
-fn test_auto_detect_programs() {
+fn test_program_detection_builtin() {
     let temp_dir = TempDir::new().unwrap();
     let testdata_dir = temp_dir.path().join("testdata");
     fs::create_dir(&testdata_dir).unwrap();
 
-    // Test with echo which should be available on all platforms
+    // Test with echo which should be available on all platforms and detected by default
     let test_content = r#"[exec:echo] exec echo "echo is available"
 stdout "echo is available"
 
-[!exec:nonexistent_program_xyz] exec echo "nonexistent program not found"
-stdout "nonexistent program not found"
+# Test with a program that likely doesn't exist on most systems
+[!exec:nonexistent_rare_program_xyz123] exec echo "rare program not found"
+stdout "rare program not found"
 "#;
 
     fs::write(testdata_dir.join("program_test.txt"), test_content).unwrap();
 
-    let result = testscript::run(testdata_dir.to_string_lossy())
-        .auto_detect_programs(&["echo", "nonexistent_program_xyz"])
-        .execute();
+    // Program detection should happen automatically
+    let result = testscript::run(testdata_dir.to_string_lossy()).execute();
     assert!(
         result.is_ok(),
         "Program detection test failed: {:?}",
@@ -105,10 +104,9 @@ fn test_runparams_condition_helpers() {
 fn test_manual_condition_files() {
     // Test our new testdata files to make sure they work properly
 
-    // Test environment conditions file
+    // Test environment conditions file - programs should be detected automatically
     let result = testscript::run("testdata")
         .condition("net", true) // Force network to true for testing
-        .auto_detect_programs(&["echo", "mkdir", "ls"])
         .execute();
 
     // Note: This might fail if some testdata files have issues,
@@ -139,10 +137,8 @@ stdout "env var is set"
 
     fs::write(testdata_dir.join("combined_test.txt"), test_content).unwrap();
 
-    let result = testscript::run(testdata_dir.to_string_lossy())
-        .auto_detect_network()
-        .auto_detect_programs(&["echo"])
-        .execute();
+    // All conditions should be available automatically
+    let result = testscript::run(testdata_dir.to_string_lossy()).execute();
     assert!(
         result.is_ok(),
         "Combined condition test failed: {:?}",
