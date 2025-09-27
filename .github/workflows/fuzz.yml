@@ -1,0 +1,127 @@
+---
+name: Fuzz Testing
+
+"on":
+  # Run daily at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      fuzz_duration:
+        description: 'Duration to run each fuzz target (seconds)'
+        required: false
+        default: '300'
+        type: string
+      max_runs:
+        description: 'Maximum number of runs per target'
+        required: false
+        default: '100000'
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fuzz:
+    name: Fuzz Testing
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust nightly
+      uses: dtolnay/rust-toolchain@nightly
+
+    - name: Install cargo-fuzz
+      run: cargo install cargo-fuzz
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: >-
+          ${{ runner.os }}-cargo-registry-fuzz-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo index
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/git
+        key: >-
+          ${{ runner.os }}-cargo-index-fuzz-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache fuzz targets
+      uses: actions/cache@v3
+      with:
+        path: fuzz/target
+        key: >-
+          ${{ runner.os }}-fuzz-target-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build fuzz targets
+      run: |
+        cd fuzz
+        cargo fuzz build parser
+        cargo fuzz build tokens
+        cargo fuzz build env_substitution
+        cargo fuzz build structured
+
+    - name: Run parser fuzz target
+      run: >
+        timeout ${{ inputs.fuzz_duration || '300' }} cargo fuzz run parser --
+        -timeout=10
+        -runs=${{ inputs.max_runs || '100000' }}
+        -max_len=8192
+        -print_final_stats=1 || true
+
+    - name: Run tokens fuzz target
+      run: >
+        timeout ${{ inputs.fuzz_duration || '300' }} cargo fuzz run tokens --
+        -timeout=10
+        -runs=${{ inputs.max_runs || '100000' }}
+        -max_len=1024
+        -print_final_stats=1 || true
+
+    - name: Run env_substitution fuzz target
+      run: >
+        timeout ${{ inputs.fuzz_duration || '300' }} cargo fuzz run
+        env_substitution --
+        -timeout=10
+        -runs=${{ inputs.max_runs || '100000' }}
+        -max_len=1024
+        -print_final_stats=1 || true
+
+    - name: Run structured fuzz target
+      run: >
+        timeout ${{ inputs.fuzz_duration || '300' }} cargo fuzz run structured --
+        -timeout=10
+        -runs=${{ inputs.max_runs || '100000' }}
+        -max_len=4096
+        -print_final_stats=1 || true
+
+    - name: Check for crashes
+      run: |
+        if find fuzz/artifacts -name "crash-*" -type f | grep -q .; then
+          echo "🚨 Crashes found!"
+          find fuzz/artifacts -name "crash-*" -type f -exec echo "Crash: {}" \;
+          find fuzz/artifacts -name "crash-*" -type f -exec xxd -l 256 {} \;
+          exit 1
+        else
+          echo "✅ No crashes found"
+        fi
+
+    - name: Upload crash artifacts
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: fuzz-crash-artifacts
+        path: fuzz/artifacts/
+        retention-days: 30
+
+    - name: Upload fuzz corpus
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: fuzz-corpus
+        path: fuzz/corpus/
+        retention-days: 7
