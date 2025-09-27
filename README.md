@@ -114,24 +114,28 @@ custom-cmd arg1 arg2 arg3
 
 ### With Advanced Conditions
 
-testscript-rs supports network detection, environment variable conditions, and automatic program detection:
+testscript-rs automatically detects network, common programs, and supports environment variable conditions:
 
 ```rust
+// Everything detected automatically - network, 35+ common programs
 testscript::run("testdata")
-    .auto_detect_network()
-    .auto_detect_programs(&["docker", "git", "npm"])
-    .condition("env:CI", std::env::var("CI").is_ok())
+    .execute()
+    .unwrap();
+
+// Manual conditions still supported for custom scenarios
+testscript::run("testdata")
+    .condition("custom", my_custom_check())
     .execute()
     .unwrap();
 ```
 
-#### Condition Types
+#### Built-in Condition Types
 
-- **Platform conditions**: `[unix]`, `[windows]`, `[linux]`, `[darwin]`
-- **Network conditions**: `[net]` - Auto-detected or manually set
-- **Program conditions**: `[exec:program]` - Check if program exists in PATH
-- **Environment variables**: `[env:VAR]` - Check if environment variable is set
-- **Build type**: `[debug]`, `[release]` - Based on compilation mode
+- **Platform**: `[unix]`, `[windows]`, `[linux]`, `[darwin]`
+- **Network**: `[net]` - Automatically detected
+- **Programs**: `[exec:program]` - 35+ common programs auto-detected (git, docker, python, etc.)
+- **Environment**: `[env:VAR]` - Dynamic environment variable checking
+- **Build**: `[debug]`, `[release]`
 
 #### Using Conditions in Test Scripts
 
