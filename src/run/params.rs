@@ -18,6 +18,8 @@ pub struct RunParams {
     pub setup: Option<SetupFn>,
     /// Conditions that can be checked in scripts
     pub conditions: HashMap<String, bool>,
+    /// Whether to update test scripts with actual output
+    pub update_scripts: bool,
 }
 
 impl RunParams {
@@ -44,10 +46,16 @@ impl RunParams {
         conditions.insert("exec:mkdir".to_string(), Self::program_exists("mkdir"));
         conditions.insert("exec:rm".to_string(), Self::program_exists("rm"));
 
+        // Check UPDATE_SCRIPTS environment variable
+        let update_scripts = std::env::var("UPDATE_SCRIPTS")
+            .map(|v| v == "1" || v.to_lowercase() == "true")
+            .unwrap_or(false);
+
         RunParams {
             commands: HashMap::new(),
             setup: None,
             conditions,
+            update_scripts,
         }
     }
 
@@ -69,6 +77,12 @@ impl RunParams {
     /// Set a condition value
     pub fn condition(mut self, name: &str, value: bool) -> Self {
         self.conditions.insert(name.to_string(), value);
+        self
+    }
+
+    /// Set whether to update scripts with actual output
+    pub fn update_scripts(mut self, update: bool) -> Self {
+        self.update_scripts = update;
         self
     }
 

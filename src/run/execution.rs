@@ -6,6 +6,17 @@ use crate::run::{environment::TestEnvironment, params::RunParams};
 use std::fs;
 use std::path::Path;
 
+/// Information about a script update needed when in update mode
+#[derive(Debug, Clone)]
+pub struct ScriptUpdate {
+    /// The line number where the stdout/stderr command appears
+    pub line_num: usize,
+    /// The command name (stdout or stderr)
+    pub command_name: String,
+    /// The new expected output
+    pub new_output: String,
+}
+
 /// Run a single script with the given parameters - main implementation
 pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
     // Read and parse the script
@@ -41,10 +52,34 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
         setup(&env)?;
     }
 
+    // Track script updates if we're in update mode
+    let mut updates = Vec::new();
+
     // Execute commands
     for command in &script.commands {
-        if let Err(e) = execute_command(&mut env, command, params) {
-            // Wrap error with script context
+        let result = execute_command(&mut env, command, params);
+
+        if let Err(e) = result {
+            // If we're in update mode and this is an output comparison error, capture the update
+            if params.update_scripts {
+                if let Error::OutputCompare {
+                    expected: _,
+                    actual,
+                } = &e
+                {
+                    if command.name == "stdout" || command.name == "stderr" {
+                        updates.push(ScriptUpdate {
+                            line_num: command.line_num,
+                            command_name: command.name.clone(),
+                            new_output: actual.clone(),
+                        });
+                        // Continue instead of failing
+                        continue;
+                    }
+                }
+            }
+
+            // Wrap error with script context for non-update cases or non-output errors
             return Err(Error::script_error(
                 &script_file,
                 command.line_num,
@@ -62,10 +97,72 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
         }
     }
 
+    // Apply updates if any were collected
+    if !updates.is_empty() && params.update_scripts {
+        apply_script_updates(script_path, &content, &updates)?;
+    }
+
     // Wait for any remaining background processes
     let background_names: Vec<String> = env.background_processes.keys().cloned().collect();
     for name in background_names {
         env.wait_for_background(&name)?;
+    }
+
+    Ok(())
+}
+
+/// Apply script updates to the actual file
+fn apply_script_updates(script_path: &Path, content: &str, updates: &[ScriptUpdate]) -> Result<()> {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut updated_lines = Vec::new();
+
+    let mut i = 0;
+    while i < lines.len() {
+        let line_num = i + 1; // Line numbers are 1-based
+
+        // Check if this line needs to be updated
+        if let Some(update) = updates.iter().find(|u| u.line_num == line_num) {
+            // This is a stdout/stderr command that needs updating
+            let line = lines[i];
+            let cmd_part = format!("{} ", update.command_name);
+
+            if line.trim_start().starts_with(&cmd_part) {
+                // Extract the indentation from the original line
+                let indent = line.len() - line.trim_start().len();
+                let indent_str = " ".repeat(indent);
+
+                // Create the updated line with proper quoting
+                let quoted_output = if update.new_output.contains(' ')
+                    || update.new_output.contains('\n')
+                    || update.new_output.contains('"')
+                {
+                    // Use proper shell quoting for complex strings
+                    format!("\"{}\"", update.new_output.replace('"', "\\\""))
+                } else if update.new_output.is_empty() {
+                    "\"-\"".to_string()
+                } else {
+                    update.new_output.clone()
+                };
+
+                updated_lines.push(format!(
+                    "{}{} {}",
+                    indent_str, update.command_name, quoted_output
+                ));
+            } else {
+                // Shouldn't happen, but preserve the original line if it doesn't match
+                updated_lines.push(line.to_string());
+            }
+        } else {
+            // Keep the original line
+            updated_lines.push(lines[i].to_string());
+        }
+        i += 1;
+    }
+
+    // Write the updated content back to the file
+    let updated_content = updated_lines.join("\n");
+    if updated_content != content {
+        fs::write(script_path, updated_content)?;
     }
 
     Ok(())

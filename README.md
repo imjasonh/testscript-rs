@@ -165,3 +165,37 @@ Error in testdata/hello.txt at line 6:
 See [`examples/sample-cli/`](./examples/sample-cli/) and its `testdata` directory for more examples.
 
 There are also more tests in [`testdata`](./testdata/) that demonstrate and check this implementations behavior.
+
+## UpdateScripts (Test Maintenance)
+
+UpdateScripts automatically updates test files with actual command output, making test maintenance easier:
+
+```rust
+// Enable via API
+testscript::run("testdata")
+    .update_scripts(true)
+    .execute()
+    .unwrap();
+```
+
+Or via environment variable:
+
+```bash
+UPDATE_SCRIPTS=1 cargo test
+```
+
+When enabled, instead of failing on output mismatches, the test files will be updated with actual command output:
+
+**Before (failing test):**
+```
+exec my-tool --version
+stdout "my-tool 1.0"
+```
+
+**After running with update mode:**
+```
+exec my-tool --version
+stdout "my-tool 2.1.0"
+```
+
+This feature only updates `stdout` and `stderr` expectations while preserving file structure and comments.
