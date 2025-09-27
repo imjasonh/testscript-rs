@@ -181,3 +181,99 @@ hello from stdout"#;
     let result = run_test(&script_path);
     assert!(result.is_ok(), "CP stdout test failed: {:?}", result);
 }
+
+#[cfg(unix)]
+#[test]
+fn test_symlink_command() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_test.txt");
+
+    let script_content = r#"# Test symlink command
+symlink original.txt link.txt
+exists link.txt
+exec cat link.txt
+stdout "original content"
+
+-- original.txt --
+original content"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Symlink test failed: {:?}", result);
+}
+
+#[cfg(unix)]
+#[test]
+fn test_symlink_directory() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_dir_test.txt");
+
+    let script_content = r#"# Test symlink with directory
+mkdir test_dir
+symlink test_dir link_dir
+exists link_dir
+exec ls link_dir"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Directory symlink test failed: {:?}", result);
+}
+
+#[cfg(unix)]
+#[test]
+fn test_symlink_relative_path() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_relative_test.txt");
+
+    let script_content = r#"# Test symlink with relative path
+mkdir subdir
+symlink ../original.txt subdir/link.txt
+exists subdir/link.txt
+exec cat subdir/link.txt
+stdout "relative content"
+
+-- original.txt --
+relative content"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Relative path symlink test failed: {:?}", result);
+}
+
+#[test]
+fn test_symlink_error_cases() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_error_test.txt");
+
+    let script_content = r#"# Test symlink error cases
+! symlink
+! symlink only_one_arg"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Symlink error test failed: {:?}", result);
+}
+
+#[test]
+fn test_issue_example() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("issue_example.txt");
+
+    let script_content = r#"# Create a symlink
+symlink original.txt link.txt
+exists link.txt
+exec cat link.txt
+stdout "original content"
+
+-- original.txt --
+original content"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Issue example test failed: {:?}", result);
+}

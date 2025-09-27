@@ -271,12 +271,12 @@ impl TestEnvironment {
 
     /// Create a symbolic link
     pub fn create_symlink(&self, target: &str, link_name: &str) -> Result<()> {
-        let target_path = self.work_dir.join(target);
         let link_path = self.work_dir.join(link_name);
-
+        
         #[cfg(unix)]
         {
-            std::os::unix::fs::symlink(&target_path, &link_path).map_err(|e| {
+            // For Unix systems, preserve the target path as-is to support relative links
+            std::os::unix::fs::symlink(target, &link_path).map_err(|e| {
                 Error::command_error(
                     "symlink",
                     format!(
@@ -292,6 +292,8 @@ impl TestEnvironment {
             // On Windows, try to create a symlink but fall back gracefully
             use std::os::windows::fs::symlink_file;
 
+            // For Windows, we need to resolve the path to check if it's a file
+            let target_path = self.work_dir.join(target);
             if target_path.is_file() {
                 symlink_file(&target_path, &link_path).map_err(|e| {
                     Error::command_error(
