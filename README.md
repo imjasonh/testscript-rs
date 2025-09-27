@@ -1,6 +1,7 @@
 # testscript-rs
 
 [![CI](https://github.com/imjasonh/testscript-rs/workflows/CI/badge.svg)](https://github.com/imjasonh/testscript-rs/actions)
+![Crates.io](https://img.shields.io/crates/v/testscript-rs)
 
 A Rust crate for testing command-line tools using filesystem-based script files.
 
@@ -58,7 +59,7 @@ Add testscript-rs to your `Cargo.toml`:
 
 ```toml
 [dev-dependencies]
-testscript-rs = "0.1"
+testscript-rs = "<release>"
 ```
 
 Requires Rust 1.70 or later.
