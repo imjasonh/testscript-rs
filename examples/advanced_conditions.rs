@@ -14,10 +14,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Manual condition setting with environment variables
     println!("\n=== Example 2: Environment-based conditions ===");
-    
+
     // Set a test environment variable
     std::env::set_var("CI", "true");
-    
+
     testscript::run("testdata")
         .condition("net", check_network_available())
         .condition("docker", command_exists("docker"))

@@ -88,7 +88,8 @@ impl RunParams {
 
     /// Automatically detect network availability and set the 'net' condition
     pub fn auto_detect_network(mut self) -> Self {
-        self.conditions.insert("net".to_string(), Self::check_network_available());
+        self.conditions
+            .insert("net".to_string(), Self::check_network_available());
         self
     }
 
@@ -96,7 +97,8 @@ impl RunParams {
     pub fn auto_detect_programs(mut self, programs: &[&str]) -> Self {
         for program in programs {
             let condition_name = format!("exec:{}", program);
-            self.conditions.insert(condition_name, Self::program_exists(program));
+            self.conditions
+                .insert(condition_name, Self::program_exists(program));
         }
         self
     }
@@ -120,7 +122,7 @@ impl RunParams {
     fn check_network_available() -> bool {
         // Try multiple reliable hosts to increase reliability
         let test_hosts = ["1.1.1.1", "8.8.8.8", "9.9.9.9"];
-        
+
         for host in &test_hosts {
             let output = std::process::Command::new("ping")
                 .args(if cfg!(windows) {
@@ -129,7 +131,7 @@ impl RunParams {
                     vec!["-c", "1", "-W", "1", host]
                 })
                 .output();
-            
+
             if let Ok(result) = output {
                 if result.status.success() {
                     return true;

@@ -26,7 +26,11 @@ stdout "negated env condition works"
     fs::write(testdata_dir.join("env_test.txt"), test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    assert!(result.is_ok(), "Environment condition test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Environment condition test failed: {:?}",
+        result
+    );
 
     // Clean up
     std::env::remove_var("TEST_CONDITION");
@@ -52,7 +56,11 @@ stdout "test completed"
     let result = testscript::run(testdata_dir.to_string_lossy())
         .auto_detect_network()
         .execute();
-    assert!(result.is_ok(), "Network condition test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Network condition test failed: {:?}",
+        result
+    );
 }
 
 #[test]
@@ -74,7 +82,11 @@ stdout "nonexistent program not found"
     let result = testscript::run(testdata_dir.to_string_lossy())
         .auto_detect_programs(&["echo", "nonexistent_program_xyz"])
         .execute();
-    assert!(result.is_ok(), "Program detection test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Program detection test failed: {:?}",
+        result
+    );
 }
 
 #[test]
@@ -92,14 +104,14 @@ fn test_runparams_condition_helpers() {
 #[test]
 fn test_manual_condition_files() {
     // Test our new testdata files to make sure they work properly
-    
+
     // Test environment conditions file
     let result = testscript::run("testdata")
         .condition("net", true) // Force network to true for testing
         .auto_detect_programs(&["echo", "mkdir", "ls"])
         .execute();
-        
-    // Note: This might fail if some testdata files have issues, 
+
+    // Note: This might fail if some testdata files have issues,
     // but our specific files should work
     if let Err(e) = result {
         println!("Some testdata files failed (expected): {}", e);
@@ -131,7 +143,11 @@ stdout "env var is set"
         .auto_detect_network()
         .auto_detect_programs(&["echo"])
         .execute();
-    assert!(result.is_ok(), "Combined condition test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Combined condition test failed: {:?}",
+        result
+    );
 
     // Clean up
     std::env::remove_var("COMBINED_TEST");
