@@ -45,7 +45,7 @@ This is test content
     // Since we can't easily capture stderr from the current process, 
     // we'll create a subprocess that runs our test
     let output = Command::new("cargo")
-        .args(&["run", "--example", "test_runner"])
+        .args(["run", "--example", "test_runner"])
         .current_dir("/home/runner/work/testscript-rs/testscript-rs")
         .env("TESTSCRIPT_TEST_DIR", testdata_dir.to_string_lossy().as_ref())
         .env("TESTSCRIPT_PRESERVE_WORK", "true")
