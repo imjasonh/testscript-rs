@@ -112,51 +112,6 @@ To call the custom command, in your testscript file:
 custom-cmd arg1 arg2 arg3
 ```
 
-### With Advanced Conditions
-
-testscript-rs automatically detects network, common programs, and supports environment variable conditions:
-
-```rust
-// Everything detected automatically - network, 35+ common programs
-testscript::run("testdata")
-    .execute()
-    .unwrap();
-
-// Manual conditions still supported for custom scenarios
-testscript::run("testdata")
-    .condition("custom", my_custom_check())
-    .execute()
-    .unwrap();
-```
-
-#### Built-in Condition Types
-
-- **Platform**: `[unix]`, `[windows]`, `[linux]`, `[darwin]`
-- **Network**: `[net]` - Automatically detected
-- **Programs**: `[exec:program]` - 35+ common programs auto-detected (git, docker, python, etc.)
-- **Environment**: `[env:VAR]` - Dynamic environment variable checking
-- **Build**: `[debug]`, `[release]`
-
-#### Using Conditions in Test Scripts
-
-```
-# Platform-specific tests  
-[unix] exec ./unix-specific-tool
-[windows] exec .\windows-tool.exe
-
-# Network-dependent tests
-[net] exec curl https://example.com
-[!net] skip "Network not available"
-
-# Environment-based tests
-[env:CI] exec deploy --dry-run
-[!env:CI] exec test --verbose
-
-# Program availability
-[exec:docker] exec docker run hello-world
-[!exec:git] skip "Git not available"
-```
-
 ## Test Script Format
 
 Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-internal/txtar) format. For complete format documentation, see the [original Go testscript documentation](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript).
@@ -182,6 +137,7 @@ Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-interna
 - **stop** - Stop test early (pass)
 - **unquote** - Remove leading `>` from file lines
 - **grep** - Search files with regex
+- **symlink** - Create symbolic links
 
 Commands can be prefixed with conditions (`[unix]`) or negated (`!`).
 
