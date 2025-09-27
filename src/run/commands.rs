@@ -292,19 +292,12 @@ impl TestEnvironment {
             // On Windows, try to create a symlink but fall back gracefully
             use std::os::windows::fs::symlink_file;
 
-            if target_path.is_file() {
-                symlink_file(&target_path, &link_path).map_err(|e| {
-                    Error::command_error(
-                        "symlink",
-                        format!("Cannot create symlink '{}' -> '{}': {} (Note: Windows symlinks may require administrator privileges)", link_name, target, e),
-                    )
-                })?;
-            } else {
-                return Err(Error::command_error(
+            symlink_file(&target_path, &link_path).map_err(|e| {
+                Error::command_error(
                     "symlink",
-                    "Symlinks on Windows are only supported for files, not directories",
-                ));
-            }
+                    format!("Cannot create symlink '{}' -> '{}': {} (Note: Windows symlinks may require administrator privileges)", link_name, target, e),
+                )
+            })?;
         }
 
         #[cfg(not(any(unix, windows)))]

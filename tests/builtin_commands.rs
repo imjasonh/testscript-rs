@@ -190,30 +190,50 @@ fn test_symlink_command() {
     let script_content = r#"# Test symlink command
 symlink target.txt link.txt
 exists link.txt
+exists target.txt
 
 # Test that symlink content matches target
 exec cat link.txt
-stdout "content from target"
+stdout "target content"
 
 -- target.txt --
-content from target"#;
+target content"#;
 
     fs::write(&script_path, script_content).unwrap();
 
     let result = run_test(&script_path);
-    // On Unix systems, this should work
+
     #[cfg(unix)]
-    assert!(result.is_ok(), "Symlink test failed on Unix: {:?}", result);
-    
-    // On Windows, symlinks may fail due to permissions
+    {
+        assert!(
+            result.is_ok(),
+            "Symlink test should pass on Unix: {:?}",
+            result
+        );
+    }
+
     #[cfg(windows)]
     {
-        if result.is_err() {
-            let error = result.unwrap_err().to_string();
-            assert!(error.contains("symlink") || error.contains("privileges"), 
-                   "Unexpected error on Windows: {}", error);
+        // On Windows, symlinks usually fail due to permissions
+        if result.is_ok() {
+            // If it passes on Windows, that means we have admin privileges - that's okay
+            println!("Symlink test passed on Windows (admin privileges detected)");
+        } else {
+            // Expected failure on Windows due to permissions
+            let error_msg = result.unwrap_err().to_string();
+            assert!(error_msg.contains("symlink"), "Error should mention symlinks: {}", error_msg);
         }
-        // If it passes, that's fine too (admin privileges)
+    }
+
+    #[cfg(not(any(unix, windows)))]
+    {
+        // On other platforms, should fail gracefully
+        assert!(
+            result.is_err(),
+            "Symlink should fail on unsupported platforms"
+        );
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("not supported"));
     }
 }
 
