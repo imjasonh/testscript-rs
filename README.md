@@ -102,6 +102,7 @@ testscript::run("testdata")
         Ok(())
     })
     .condition("feature-enabled", true)
+    .preserve_work_on_failure(true)  // Debug failed tests
     .execute()
     .unwrap();
 ```

@@ -93,7 +93,7 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 /// testscript::run("testdata").execute().unwrap();
 /// ```
 ///
-/// ### With Custom Setup
+/// ### With Custom Setup and Work Directory Preservation
 /// ```no_run
 /// use testscript_rs::testscript;
 ///
@@ -111,6 +111,7 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///         Ok(())
 ///     })
 ///     .condition("custom", my_custom_check())
+///     .preserve_work_on_failure(true)  // Preserve work directory on test failure
 ///     .execute()
 ///     .unwrap();
 ///
@@ -197,6 +198,34 @@ impl Builder {
     /// will be updated with the actual command output.
     pub fn update_scripts(mut self, update: bool) -> Self {
         self.params = self.params.update_scripts(update);
+        self
+    }
+
+    /// Enable or disable preserving working directories when tests fail
+    ///
+    /// When enabled, if a test fails, the working directory will be preserved
+    /// and its path will be printed to stderr for debugging purposes.
+    /// This matches the behavior of Go's testscript TestWork functionality.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use testscript_rs::testscript;
+    ///
+    /// testscript::run("testdata")
+    ///     .preserve_work_on_failure(true)
+    ///     .execute()
+    ///     .unwrap();
+    /// ```
+    ///
+    /// When a test fails, you'll see output like:
+    /// ```text
+    /// Test failed. Work directory preserved at: /tmp/testscript-work-abc123
+    /// You can inspect the test environment:
+    ///   cd /tmp/testscript-work-abc123
+    ///   ls -la
+    /// ```
+    pub fn preserve_work_on_failure(mut self, preserve: bool) -> Self {
+        self.params = self.params.preserve_work_on_failure(preserve);
         self
     }
 

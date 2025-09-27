@@ -20,6 +20,8 @@ pub struct RunParams {
     pub conditions: HashMap<String, bool>,
     /// Whether to update test scripts with actual output
     pub update_scripts: bool,
+    /// Whether to preserve working directories when tests fail
+    pub preserve_work_on_failure: bool,
 }
 
 impl RunParams {
@@ -52,6 +54,7 @@ impl RunParams {
             setup: None,
             conditions,
             update_scripts,
+            preserve_work_on_failure: false,
         }
     }
 
@@ -79,6 +82,12 @@ impl RunParams {
     /// Set whether to update scripts with actual output
     pub fn update_scripts(mut self, update: bool) -> Self {
         self.update_scripts = update;
+        self
+    }
+
+    /// Set whether to preserve working directories when tests fail
+    pub fn preserve_work_on_failure(mut self, preserve: bool) -> Self {
+        self.preserve_work_on_failure = preserve;
         self
     }
 

@@ -301,6 +301,13 @@ impl TestEnvironment {
 
         result
     }
+
+    /// Preserve the work directory by preventing TempDir cleanup
+    /// Returns the path to the preserved directory
+    pub fn preserve_work_dir(self) -> std::path::PathBuf {
+        // Use the idiomatic way to preserve a TempDir
+        self._temp_dir.keep()
+    }
 }
 
 #[cfg(test)]
