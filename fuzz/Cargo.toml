@@ -1,0 +1,43 @@
+[package]
+name = "testscript-rs-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1.0", features = ["derive"] }
+
+[dependencies.testscript-rs]
+path = ".."
+
+[[bin]]
+name = "parser"
+path = "fuzz_targets/parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tokens"
+path = "fuzz_targets/tokens.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "env_substitution"
+path = "fuzz_targets/env_substitution.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "structured"
+path = "fuzz_targets/structured.rs"
+test = false
+doc = false
+bench = false
