@@ -206,3 +206,19 @@ original content"#;
     let result = run_test(&script_path);
     assert!(result.is_ok(), "Symlink test failed: {:?}", result);
 }
+
+#[test] 
+fn test_symlink_error_cases() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("symlink_error_test.txt");
+
+    let script_content = r#"# Test symlink error cases
+! symlink
+! symlink only_one_arg
+! symlink too many arguments here"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let result = run_test(&script_path);
+    assert!(result.is_ok(), "Symlink error test failed: {:?}", result);
+}

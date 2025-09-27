@@ -127,6 +127,7 @@ Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-interna
 - **mv** - Move/rename files
 - **rm** - Remove files/directories
 - **chmod** - Change file permissions
+- **symlink** - Create symbolic links
 - **env** - Set environment variables
 - **cmpenv** - Compare files with environment variable substitution
 - **stdin** - Set stdin for next command
