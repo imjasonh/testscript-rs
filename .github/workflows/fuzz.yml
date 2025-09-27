@@ -38,21 +38,21 @@ jobs:
       run: cargo install cargo-fuzz
 
     - name: Cache cargo registry
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cargo/registry
         key: >-
           ${{ runner.os }}-cargo-registry-fuzz-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Cache cargo index
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cargo/git
         key: >-
           ${{ runner.os }}-cargo-index-fuzz-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Cache fuzz targets
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: fuzz/target
         key: >-
@@ -112,7 +112,7 @@ jobs:
 
     - name: Upload crash artifacts
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fuzz-crash-artifacts
         path: fuzz/artifacts/
@@ -120,7 +120,7 @@ jobs:
 
     - name: Upload fuzz corpus
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fuzz-corpus
         path: fuzz/corpus/
