@@ -140,6 +140,15 @@ impl Builder {
         self
     }
 
+    /// Enable or disable updating test scripts with actual output
+    ///
+    /// When enabled, instead of failing on output mismatches, the test files
+    /// will be updated with the actual command output.
+    pub fn update_scripts(mut self, update: bool) -> Self {
+        self.params = self.params.update_scripts(update);
+        self
+    }
+
     /// Execute all test scripts in the configured directory
     ///
     /// This will discover all `.txt` files in the directory and run them as test scripts.
