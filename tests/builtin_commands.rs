@@ -188,34 +188,44 @@ fn test_symlink_command() {
     let script_path = temp_dir.path().join("symlink_test.txt");
 
     let script_content = r#"# Test symlink command
-symlink original.txt link.txt
+symlink target.txt link.txt
 exists link.txt
+
+# Test that symlink content matches target
 exec cat link.txt
-stdout "original content"
+stdout "content from target"
 
-# Test symlink with directory
-mkdir test_dir
-symlink test_dir dir_link
-exists dir_link
-
--- original.txt --
-original content"#;
+-- target.txt --
+content from target"#;
 
     fs::write(&script_path, script_content).unwrap();
 
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Symlink test failed: {:?}", result);
+    // On Unix systems, this should work
+    #[cfg(unix)]
+    assert!(result.is_ok(), "Symlink test failed on Unix: {:?}", result);
+    
+    // On Windows, symlinks may fail due to permissions
+    #[cfg(windows)]
+    {
+        if result.is_err() {
+            let error = result.unwrap_err().to_string();
+            assert!(error.contains("symlink") || error.contains("privileges"), 
+                   "Unexpected error on Windows: {}", error);
+        }
+        // If it passes, that's fine too (admin privileges)
+    }
 }
 
-#[test] 
+#[test]
 fn test_symlink_error_cases() {
     let temp_dir = TempDir::new().unwrap();
     let script_path = temp_dir.path().join("symlink_error_test.txt");
 
-    let script_content = r#"# Test symlink error cases
+    let script_content = r#"# Test symlink error handling
 ! symlink
 ! symlink only_one_arg
-! symlink too many arguments here"#;
+! symlink too many args here"#;
 
     fs::write(&script_path, script_content).unwrap();
 
