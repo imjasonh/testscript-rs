@@ -82,7 +82,10 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
             // Handle work directory preservation on failure
             if params.preserve_work_on_failure {
                 let preserved_path = env.preserve_work_dir();
-                eprintln!("Test failed. Work directory preserved at: {}", preserved_path.display());
+                eprintln!(
+                    "Test failed. Work directory preserved at: {}",
+                    preserved_path.display()
+                );
                 eprintln!("You can inspect the test environment:");
                 eprintln!("  cd {}", preserved_path.display());
                 eprintln!("  ls -la");
@@ -102,7 +105,10 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
             // Handle work directory preservation for skipped tests if configured
             if params.preserve_work_on_failure {
                 let preserved_path = env.preserve_work_dir();
-                eprintln!("Test skipped. Work directory preserved at: {}", preserved_path.display());
+                eprintln!(
+                    "Test skipped. Work directory preserved at: {}",
+                    preserved_path.display()
+                );
                 eprintln!("You can inspect the test environment:");
                 eprintln!("  cd {}", preserved_path.display());
                 eprintln!("  ls -la");

@@ -18,10 +18,10 @@ stdout "goodbye"
     fs::write(testdata_dir.join("failing_test.txt"), test_content).unwrap();
 
     let result = testscript_rs::testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     // Should fail
     assert!(result.is_err());
-    
+
     // Work directory should be cleaned up (we can't easily test this since TempDir cleanup is automatic)
 }
 
@@ -42,12 +42,15 @@ This is test content
     fs::write(testdata_dir.join("failing_test.txt"), test_content).unwrap();
 
     // We need to capture stderr to see the preservation message
-    // Since we can't easily capture stderr from the current process, 
+    // Since we can't easily capture stderr from the current process,
     // we'll create a subprocess that runs our test
     let output = Command::new("cargo")
         .args(["run", "--example", "test_runner"])
         .current_dir("/home/runner/work/testscript-rs/testscript-rs")
-        .env("TESTSCRIPT_TEST_DIR", testdata_dir.to_string_lossy().as_ref())
+        .env(
+            "TESTSCRIPT_TEST_DIR",
+            testdata_dir.to_string_lossy().as_ref(),
+        )
         .env("TESTSCRIPT_PRESERVE_WORK", "true")
         .output();
 
@@ -60,7 +63,7 @@ This is test content
         let result = testscript_rs::testscript::run(testdata_dir.to_string_lossy())
             .preserve_work_on_failure(true)
             .execute();
-        
+
         assert!(result.is_err());
     }
 }
@@ -84,7 +87,7 @@ This is test content
     let result = testscript_rs::testscript::run(testdata_dir.to_string_lossy())
         .preserve_work_on_failure(true)
         .execute();
-    
+
     // Should succeed and not preserve directory
     assert!(result.is_ok());
 }
@@ -107,17 +110,21 @@ This is test content
     let result = testscript_rs::testscript::run(testdata_dir.to_string_lossy())
         .preserve_work_on_failure(true)
         .execute();
-    
+
     // Should fail due to skip, but this tests that the preserve logic handles skip correctly
     assert!(result.is_err());
     if let Err(e) = result {
         // The error might be wrapped in script context, so just check for skip-related content
         let error_str = e.to_string();
-        assert!(error_str.contains("SKIP") || error_str.contains("Test skipped") || error_str.contains("skip"));
+        assert!(
+            error_str.contains("SKIP")
+                || error_str.contains("Test skipped")
+                || error_str.contains("skip")
+        );
     }
 }
 
-#[test] 
+#[test]
 fn test_preserve_work_with_background_process_failure() {
     // Create a test that fails during background process cleanup
     let temp_dir = TempDir::new().unwrap();
@@ -134,7 +141,7 @@ wait sleep
     let _result = testscript_rs::testscript::run(testdata_dir.to_string_lossy())
         .preserve_work_on_failure(true)
         .execute();
-    
+
     // We don't assert success/failure here since sleep behavior varies, but the test exercises the code
 }
 
@@ -153,8 +160,8 @@ stdout "hello"
 
     let result = testscript_rs::testscript::run(testdata_dir.to_string_lossy())
         .preserve_work_on_failure(true)
-        .preserve_work_on_failure(false)  // Can be chained and overridden
+        .preserve_work_on_failure(false) // Can be chained and overridden
         .execute();
-    
+
     assert!(result.is_ok());
 }
