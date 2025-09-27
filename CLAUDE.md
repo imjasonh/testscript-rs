@@ -87,6 +87,6 @@ testscript::run("testdata")
 
 ## Built-in Commands
 
-Core: `exec`, `cmp`, `stdout`, `stderr`, `cd`, `wait`, `exists`, `mkdir`, `cp`, `mv`, `rm`, `chmod`, `env`, `cmpenv`, `stdin`, `skip`, `stop`, `kill`, `unquote`, `grep`
+Core: `exec`, `cmp`, `stdout`, `stderr`, `cd`, `wait`, `exists`, `mkdir`, `cp`, `mv`, `rm`, `chmod`, `env`, `cmpenv`, `stdin`, `skip`, `stop`, `kill`, `unquote`, `grep`, `symlink`
 
 The command dispatch checks custom commands first, then falls back to built-ins, enabling easy extension.
