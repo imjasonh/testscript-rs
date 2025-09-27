@@ -197,8 +197,9 @@ fn execute_command_inner(
         let condition_met = if let Some(value) = params.conditions.get(condition) {
             *value
         } else if condition.starts_with("env:") {
-            // Dynamic environment variable condition
             RunParams::check_env_condition(condition)
+        } else if let Some(program) = condition.strip_prefix("exec:") {
+            RunParams::program_exists(program)
         } else if let Some(base_condition) = condition.strip_prefix('!') {
             // Handle negated conditions
             if let Some(value) = params.conditions.get(base_condition) {
@@ -206,6 +207,8 @@ fn execute_command_inner(
             } else if base_condition.starts_with("env:") {
                 // Dynamic negated environment variable condition
                 !RunParams::check_env_condition(base_condition)
+            } else if let Some(program) = base_condition.strip_prefix("exec:") {
+                !RunParams::program_exists(program)
             } else {
                 return Err(Error::UnknownCondition {
                     condition: base_condition.to_string(),

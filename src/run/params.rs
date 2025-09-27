@@ -42,39 +42,6 @@ impl RunParams {
         // Add network condition - check if network is available by default
         conditions.insert("net".to_string(), Self::check_network_available());
 
-        // Check for common programs - optimized set for better CI performance
-        let common_programs = [
-            // Essential Unix/Windows commands (most likely to exist)
-            "cat",
-            "echo",
-            "ls",
-            "mkdir",
-            "rm",
-            "cp",
-            "mv",
-            "grep",
-            "find",
-            // Core development tools that are commonly available
-            "git",
-            "make",
-            "curl",
-            "python",
-            "node",
-            "docker",
-            // System tools
-            "sleep",
-            "true",
-            "false",
-            "sh",
-            // Test programs (for testing purposes - these likely don't exist)
-            "nonexistent_rare_program_xyz123",
-        ];
-
-        for program in &common_programs {
-            let condition_name = format!("exec:{}", program);
-            conditions.insert(condition_name, Self::program_exists(program));
-        }
-
         // Check UPDATE_SCRIPTS environment variable
         let update_scripts = std::env::var("UPDATE_SCRIPTS")
             .map(|v| v == "1" || v.to_lowercase() == "true")
@@ -116,7 +83,9 @@ impl RunParams {
     }
 
     /// Check if a program exists in PATH (cross-platform)
-    fn program_exists(program: &str) -> bool {
+    pub fn program_exists(program: &str) -> bool {
+        // TODO: Consider caching results for performance if needed
+
         // Use different commands based on platform
         #[cfg(windows)]
         let check_cmd = "where";

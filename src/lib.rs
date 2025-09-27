@@ -70,7 +70,6 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 /// Builder for configuring and running testscript tests
 ///
 /// This provides a fluent interface for setting up and executing test scripts.
-/// Network detection and 35+ common programs are automatically detected by default.
 ///
 /// ## Automatic Condition Detection
 ///
@@ -79,11 +78,10 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 /// - **Platform conditions**: `[unix]`, `[windows]`, `[linux]`, `[darwin]`, `[macos]`
 /// - **Network condition**: `[net]` - Tests network connectivity by pinging reliable hosts
 /// - **Build conditions**: `[debug]`, `[release]` - Based on compilation flags
-/// - **Program conditions**: `[exec:program]` - Detects 15+ common programs including:
-///   - Basic tools: cat, echo, ls, mkdir, rm, cp, mv, grep, find
-///   - Development: git, make, curl, python, node, docker  
-///   - System: sleep, true, false, sh
+/// - **Program conditions**: `[exec:program]` - Checks if a program is available in PATH
 /// - **Environment conditions**: `[env:VAR]` - Dynamic checking of environment variables
+/// - **Program existence**: `[exec:program]` - Checks if a program is available in PATH
+/// - **Negation**: Use `!` to negate any condition, e.g. `[!windows]`, `[!env:CI]`, `[!exec:git]`
 ///
 /// ## Examples
 ///
