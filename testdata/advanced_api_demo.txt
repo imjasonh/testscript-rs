@@ -1,0 +1,26 @@
+# Demonstrate complete advanced condition API
+
+# Set an environment variable for testing
+env TEST_DEMO=active
+
+# Test network condition (will work if network is available)
+[net] exec echo "Network is working"
+
+# Test environment variable condition
+[env:TEST_DEMO] exec echo "Environment variable TEST_DEMO is set"
+[env:TEST_DEMO] stdout "Environment variable TEST_DEMO is set"
+
+# Test program detection (echo should be available everywhere)
+[exec:echo] exec echo "echo command is available"
+[exec:echo] stdout "echo command is available"
+
+# Test negated environment condition
+[!env:NONEXISTENT_VAR] exec echo "NONEXISTENT_VAR is not set"
+[!env:NONEXISTENT_VAR] stdout "NONEXISTENT_VAR is not set"
+
+# Test platform conditions (existing functionality)
+[unix] exec echo "Running on Unix-like system"
+[windows] exec echo "Running on Windows"
+
+exec echo "All condition tests completed successfully"
+stdout "All condition tests completed successfully"
