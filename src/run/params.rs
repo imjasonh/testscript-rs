@@ -39,6 +39,9 @@ impl RunParams {
         conditions.insert("debug".to_string(), cfg!(debug_assertions));
         conditions.insert("release".to_string(), !cfg!(debug_assertions));
 
+        // Add network condition - check if network is available by default
+        conditions.insert("net".to_string(), Self::check_network_available());
+
         // Check for common programs
         conditions.insert("exec:cat".to_string(), Self::program_exists("cat"));
         conditions.insert("exec:echo".to_string(), Self::program_exists("echo"));
@@ -86,7 +89,10 @@ impl RunParams {
         self
     }
 
-    /// Automatically detect network availability and set the 'net' condition
+    /// Re-detect network availability and update the 'net' condition
+    ///
+    /// The 'net' condition is automatically checked at startup, but this method
+    /// can be used to refresh the network status if needed.
     pub fn auto_detect_network(mut self) -> Self {
         self.conditions
             .insert("net".to_string(), Self::check_network_available());

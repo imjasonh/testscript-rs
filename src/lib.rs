@@ -169,10 +169,13 @@ impl Builder {
         self
     }
 
-    /// Automatically detect network availability and set the 'net' condition
+    /// Re-detect network availability and update the 'net' condition
+    ///
+    /// The 'net' condition is automatically checked at startup, but this method
+    /// can be used to refresh the network status if needed.
     ///
     /// This will attempt to ping reliable hosts to determine if network
-    /// connectivity is available and set the condition accordingly.
+    /// connectivity is available and update the condition accordingly.
     pub fn auto_detect_network(mut self) -> Self {
         self.params = self.params.auto_detect_network();
         self

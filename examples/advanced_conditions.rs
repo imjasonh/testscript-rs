@@ -3,17 +3,13 @@
 use testscript_rs::testscript;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Running testscript with advanced condition support...");
-
     // Example 1: Basic usage with auto-detection
-    println!("\n=== Example 1: Auto-detect network and programs ===");
     testscript::run("testdata")
         .auto_detect_network()
         .auto_detect_programs(&["docker", "git", "npm", "echo"])
         .execute()?;
 
     // Example 2: Manual condition setting with environment variables
-    println!("\n=== Example 2: Environment-based conditions ===");
 
     // Set a test environment variable
     std::env::set_var("CI", "true");
@@ -23,7 +19,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .condition("docker", command_exists("docker"))
         .execute()?;
 
-    println!("All tests completed successfully!");
     Ok(())
 }
 

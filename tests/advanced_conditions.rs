@@ -152,3 +152,33 @@ stdout "env var is set"
     // Clean up
     std::env::remove_var("COMBINED_TEST");
 }
+
+#[test]
+fn test_net_condition_available_by_default() {
+    let testdata_dir = tempfile::tempdir().unwrap();
+
+    let test_content = r#"
+# Test that [net] condition is available by default
+# This should work without calling auto_detect_network()
+
+[net] exec echo "Network available"
+[!net] exec echo "Network not available"
+
+exec echo "Test completed"
+stdout "Test completed"
+"#;
+
+    fs::write(
+        testdata_dir.path().join("net_default_test.txt"),
+        test_content,
+    )
+    .unwrap();
+
+    // Test WITHOUT calling auto_detect_network() - should still work
+    let result = testscript::run(testdata_dir.path().to_string_lossy()).execute();
+    assert!(
+        result.is_ok(),
+        "Network condition should be available by default: {:?}",
+        result
+    );
+}
