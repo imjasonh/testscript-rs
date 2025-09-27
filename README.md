@@ -201,32 +201,3 @@ stdout "my-tool 2.1.0"
 ```
 
 This feature only updates `stdout` and `stderr` expectations while preserving file structure and comments.
-
-## TestWork (Debug Failed Tests)
-
-When tests fail, you can preserve the working directory to inspect the test environment and debug issues:
-
-```rust
-testscript::run("testdata")
-    .preserve_work_on_failure(true)
-    .execute()
-    .unwrap();
-```
-
-When a test fails with this option enabled, you'll see output like:
-
-```
-Test failed. Work directory preserved at: /tmp/testscript-work-abc123
-You can inspect the test environment:
-  cd /tmp/testscript-work-abc123
-  ls -la
-```
-
-This feature matches Go's testscript `TestWork` functionality and makes debugging much easier by allowing you to:
-
-- Inspect files created during test execution
-- Manually run commands that failed
-- Understand the exact state when the test failed
-- Debug complex test scenarios step-by-step
-
-The working directory contains all files from the test script's file blocks, plus any files created during test execution.
