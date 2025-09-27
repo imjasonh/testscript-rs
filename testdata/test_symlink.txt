@@ -1,0 +1,8 @@
+# Test symlink functionality
+symlink original.txt link.txt
+exists link.txt
+exec cat link.txt
+stdout "original content"
+
+-- original.txt --
+original content
