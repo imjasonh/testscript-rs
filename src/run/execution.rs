@@ -79,6 +79,15 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
                 }
             }
 
+            // Handle work directory preservation on failure
+            if params.preserve_work_on_failure {
+                let preserved_path = env.preserve_work_dir();
+                eprintln!("Test failed. Work directory preserved at: {}", preserved_path.display());
+                eprintln!("You can inspect the test environment:");
+                eprintln!("  cd {}", preserved_path.display());
+                eprintln!("  ls -la");
+            }
+
             // Wrap error with script context for non-update cases or non-output errors
             return Err(Error::script_error(
                 &script_file,
@@ -90,6 +99,14 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
 
         // Check for early termination
         if env.should_skip {
+            // Handle work directory preservation for skipped tests if configured
+            if params.preserve_work_on_failure {
+                let preserved_path = env.preserve_work_dir();
+                eprintln!("Test skipped. Work directory preserved at: {}", preserved_path.display());
+                eprintln!("You can inspect the test environment:");
+                eprintln!("  cd {}", preserved_path.display());
+                eprintln!("  ls -la");
+            }
             return Err(Error::Generic("Test skipped".to_string()));
         }
         if env.should_stop {
@@ -102,10 +119,19 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
         apply_script_updates(script_path, &content, &updates)?;
     }
 
-    // Wait for any remaining background processes
+    // Wait for any remaining background processes - handle failures here too
     let background_names: Vec<String> = env.background_processes.keys().cloned().collect();
     for name in background_names {
-        env.wait_for_background(&name)?;
+        if let Err(e) = env.wait_for_background(&name) {
+            if params.preserve_work_on_failure {
+                let preserved_path = env.preserve_work_dir();
+                eprintln!("Test failed during background process cleanup. Work directory preserved at: {}", preserved_path.display());
+                eprintln!("You can inspect the test environment:");
+                eprintln!("  cd {}", preserved_path.display());
+                eprintln!("  ls -la");
+            }
+            return Err(e);
+        }
     }
 
     Ok(())
