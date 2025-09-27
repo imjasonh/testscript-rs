@@ -221,7 +221,11 @@ target content"#;
         } else {
             // Expected failure on Windows due to permissions
             let error_msg = result.unwrap_err().to_string();
-            assert!(error_msg.contains("symlink"), "Error should mention symlinks: {}", error_msg);
+            assert!(
+                error_msg.contains("symlink"),
+                "Error should mention symlinks: {}",
+                error_msg
+            );
         }
     }
 
