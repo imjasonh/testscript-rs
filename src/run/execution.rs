@@ -58,11 +58,15 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
     // Execute commands
     for command in &script.commands {
         let result = execute_command(&mut env, command, params);
-        
+
         if let Err(e) = result {
             // If we're in update mode and this is an output comparison error, capture the update
             if params.update_scripts {
-                if let Error::OutputCompare { expected: _, actual } = &e {
+                if let Error::OutputCompare {
+                    expected: _,
+                    actual,
+                } = &e
+                {
                     if command.name == "stdout" || command.name == "stderr" {
                         updates.push(ScriptUpdate {
                             line_num: command.line_num,
@@ -74,7 +78,7 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
                     }
                 }
             }
-            
+
             // Wrap error with script context for non-update cases or non-output errors
             return Err(Error::script_error(
                 &script_file,
@@ -111,26 +115,27 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
 fn apply_script_updates(script_path: &Path, content: &str, updates: &[ScriptUpdate]) -> Result<()> {
     let lines: Vec<&str> = content.lines().collect();
     let mut updated_lines = Vec::new();
-    
+
     let mut i = 0;
     while i < lines.len() {
         let line_num = i + 1; // Line numbers are 1-based
-        
+
         // Check if this line needs to be updated
         if let Some(update) = updates.iter().find(|u| u.line_num == line_num) {
             // This is a stdout/stderr command that needs updating
             let line = lines[i];
             let cmd_part = format!("{} ", update.command_name);
-            
+
             if line.trim_start().starts_with(&cmd_part) {
                 // Extract the indentation from the original line
                 let indent = line.len() - line.trim_start().len();
                 let indent_str = " ".repeat(indent);
-                
+
                 // Create the updated line with proper quoting
-                let quoted_output = if update.new_output.contains(' ') || 
-                                     update.new_output.contains('\n') || 
-                                     update.new_output.contains('"') {
+                let quoted_output = if update.new_output.contains(' ')
+                    || update.new_output.contains('\n')
+                    || update.new_output.contains('"')
+                {
                     // Use proper shell quoting for complex strings
                     format!("\"{}\"", update.new_output.replace('"', "\\\""))
                 } else if update.new_output.is_empty() {
@@ -138,8 +143,11 @@ fn apply_script_updates(script_path: &Path, content: &str, updates: &[ScriptUpda
                 } else {
                     update.new_output.clone()
                 };
-                
-                updated_lines.push(format!("{}{} {}", indent_str, update.command_name, quoted_output));
+
+                updated_lines.push(format!(
+                    "{}{} {}",
+                    indent_str, update.command_name, quoted_output
+                ));
             } else {
                 // Shouldn't happen, but preserve the original line if it doesn't match
                 updated_lines.push(line.to_string());
@@ -150,13 +158,13 @@ fn apply_script_updates(script_path: &Path, content: &str, updates: &[ScriptUpda
         }
         i += 1;
     }
-    
+
     // Write the updated content back to the file
     let updated_content = updated_lines.join("\n");
     if updated_content != content {
         fs::write(script_path, updated_content)?;
     }
-    
+
     Ok(())
 }
 

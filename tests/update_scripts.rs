@@ -27,8 +27,11 @@ stdout "expected output"
 
     // Check that the file was updated with the actual output
     let updated_content = fs::read_to_string(&test_file).unwrap();
-    assert!(updated_content.contains("stdout \"actual output\""), 
-            "File should be updated with actual output, got: {}", updated_content);
+    assert!(
+        updated_content.contains("stdout \"actual output\""),
+        "File should be updated with actual output, got: {}",
+        updated_content
+    );
 }
 
 #[test]
@@ -54,15 +57,18 @@ stderr "wrong error message"
 
     // Check that the file was updated
     let updated_content = fs::read_to_string(&test_file).unwrap();
-    assert!(updated_content.contains("stderr \"error message\""), 
-            "File should be updated with actual stderr output, got: {}", updated_content);
+    assert!(
+        updated_content.contains("stderr \"error message\""),
+        "File should be updated with actual stderr output, got: {}",
+        updated_content
+    );
 }
 
 #[test]
 fn test_update_scripts_via_env_var() {
     // Ensure clean state
     std::env::remove_var("UPDATE_SCRIPTS");
-    
+
     let temp_dir = TempDir::new().unwrap();
     let testdata_dir = temp_dir.path().join("testdata");
     fs::create_dir(&testdata_dir).unwrap();
@@ -84,19 +90,26 @@ stdout "wrong output"
     // Clean up the env var immediately after the test
     std::env::remove_var("UPDATE_SCRIPTS");
 
-    assert!(result.is_ok(), "Update via env var should succeed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Update via env var should succeed: {:?}",
+        result
+    );
 
     // Check that the file was updated
     let updated_content = fs::read_to_string(&test_file).unwrap();
-    assert!(updated_content.contains("stdout \"env test output\""), 
-            "File should be updated via env var, got: {}", updated_content);
+    assert!(
+        updated_content.contains("stdout \"env test output\""),
+        "File should be updated via env var, got: {}",
+        updated_content
+    );
 }
 
 #[test]
 fn test_normal_mode_still_fails() {
     // Ensure UPDATE_SCRIPTS env var is not set
     std::env::remove_var("UPDATE_SCRIPTS");
-    
+
     let temp_dir = TempDir::new().unwrap();
     let testdata_dir = temp_dir.path().join("testdata");
     fs::create_dir(&testdata_dir).unwrap();
@@ -114,9 +127,16 @@ stdout "expected output"
         .update_scripts(false)
         .execute();
 
-    assert!(result.is_err(), "Normal mode should still fail on mismatch: {:?}", result);
+    assert!(
+        result.is_err(),
+        "Normal mode should still fail on mismatch: {:?}",
+        result
+    );
 
     // Check that the file was NOT updated
     let content = fs::read_to_string(&test_file).unwrap();
-    assert_eq!(content, test_content, "File should not be modified in normal mode");
+    assert_eq!(
+        content, test_content,
+        "File should not be modified in normal mode"
+    );
 }
