@@ -1,7 +1,5 @@
 # Test network condition support
 
-[env:CI] skip Skipping this test on GitHub Actions
-
 # This command will only run if network is available
 [net] exec echo "Network is available"
 
