@@ -1,0 +1,33 @@
+# rustfmt configuration for testscript-rs
+# This ensures consistent code formatting across the project
+# Only includes stable rustfmt features for compatibility
+
+# Use the 2021 edition for better formatting
+edition = "2021"
+
+# Line width - commonly used value that works well for most screens
+max_width = 100
+
+# Hard tabs - set to false for spaces
+hard_tabs = false
+
+# Tab spaces
+tab_spaces = 4
+
+# Newline style
+newline_style = "Unix"
+
+# Use field init shorthand when possible  
+use_field_init_shorthand = true
+
+# Use try shorthand
+use_try_shorthand = true
+
+# Reorder imports
+reorder_imports = true
+
+# Remove nested parens
+remove_nested_parens = true
+
+# Merge derives
+merge_derives = true
