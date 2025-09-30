@@ -29,7 +29,11 @@ Test content in custom root
         .workdir_root(custom_root_path)
         .execute();
 
-    assert!(result.is_ok(), "Test with custom workdir root failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Test with custom workdir root failed: {:?}",
+        result
+    );
 }
 
 #[test]
@@ -50,15 +54,21 @@ stdout "test"
         .workdir_root(nonexistent_path)
         .execute();
 
-    assert!(result.is_err(), "Expected error for non-existent workdir root");
+    assert!(
+        result.is_err(),
+        "Expected error for non-existent workdir root"
+    );
     let error_msg = format!("{:?}", result.unwrap_err());
-    assert!(error_msg.contains("does not exist"), "Error should mention directory doesn't exist");
+    assert!(
+        error_msg.contains("does not exist"),
+        "Error should mention directory doesn't exist"
+    );
 }
 
 #[test]
 fn test_workdir_root_not_a_directory() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create a file (not directory) to test the validation
     let file_path = temp_dir.path().join("not_a_directory.txt");
     fs::write(&file_path, "this is a file").unwrap();
@@ -78,11 +88,16 @@ stdout "test"
         .workdir_root(&file_path)
         .execute();
 
-    assert!(result.is_err(), "Expected error for file used as workdir root");
+    assert!(
+        result.is_err(),
+        "Expected error for file used as workdir root"
+    );
     let error_msg = format!("{:?}", result.unwrap_err());
-    assert!(error_msg.contains("not a directory"), "Error should mention path is not a directory");
+    assert!(
+        error_msg.contains("not a directory"),
+        "Error should mention path is not a directory"
+    );
 }
-
 
 #[test]
 fn test_workdir_root_with_preserve_work() {
@@ -110,10 +125,12 @@ Configuration file for testing
         .preserve_work_on_failure(true)
         .execute();
 
-    assert!(result.is_ok(), "Combined features test failed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Combined features test failed: {:?}",
+        result
+    );
 }
-
-
 
 #[test]
 fn test_workdir_root_api_chaining() {
