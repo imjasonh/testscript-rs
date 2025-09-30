@@ -5,13 +5,37 @@
 
 A Rust crate for testing command-line tools using filesystem-based script files.
 
-testscript-rs provides a framework for writing integration tests for CLI applications using the `.txtar` format, where test scripts and file contents are combined in a single file.
+testscript-rs provides a framework for writing integration tests for CLI applications using a simple DSL using the `.txtar` format, where test scripts and file contents are combined in a single file.
 
-This crate is inspired by and aims to be compatible with Go's [`github.com/rogpeppe/go-internal/testscript`](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript) package.
+This crate is inspired by and aims to be compatible with Go's [`github.com/rogpeppe/go-internal/testscript`](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript) package, which was itself extracted from internal packages in the Go stdlib, having originally been written by Russ Cox.
 
 Testscript is primarily useful for describing testing scenarios involving executing commands and dealing with files. This makes it a good choice for testing CLI applications in a succinct and human-readable way.
 
 ## Quick Example
+
+Given a file `testdata/simple.txt`:
+
+```
+echo "hello"    # print "hello"
+stdout "hello"  # check that stdout includes "hello"
+```
+
+You can run this in your tests:
+
+```rust
+use testscript_rs::testscript;
+
+#[test]
+fn test_my_cli() {
+    testscript::run("testdata")
+        .execute()
+        .unwrap();
+}
+```
+
+The test will find every testscript file in `./testdata`, and execute it.
+
+A more realistic example might look like this:
 
 ```rust
 use testscript_rs::testscript;
@@ -66,38 +90,12 @@ Requires Rust 1.70 or later.
 
 ## Usage
 
-### Basic Usage
-
-```rust
-use testscript_rs::testscript;
-
-#[test]
-fn test_cli() {
-    testscript::run("testdata").execute().unwrap();
-}
-```
-
-### With Setup Hook
-
-```rust
-testscript::run("testdata")
-    .setup(|env| {
-        // Compile your binary before each test
-        std::process::Command::new("cargo")
-            .args(["build", "--bin", "my-tool"])
-            .status()?;
-        Ok(())
-    })
-    .execute()
-    .unwrap();
-```
-
 ### With Custom Commands
 
 ```rust
 testscript::run("testdata")
     .command("custom-cmd", |env, args| {
-        // Your custom command implementation
+        // Your custom command implementation, e.g., the entrypoint of your CLI, so you don't have to `cargo build` it as above.
         println!("Running custom command with args: {:?}", args);
         Ok(())
     })
@@ -168,7 +166,7 @@ See [`examples/sample-cli/`](./examples/sample-cli/) and its `testdata` director
 
 There are also more tests in [`testdata`](./testdata/) that demonstrate and check this implementations behavior.
 
-## UpdateScripts (Test Maintenance)
+## UpdateScripts for Easier Test Maintenance
 
 UpdateScripts automatically updates test files with actual command output, making test maintenance easier:
 
