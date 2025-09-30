@@ -24,6 +24,8 @@ pub struct RunParams {
     pub preserve_work_on_failure: bool,
     /// Optional root directory for test working directories
     pub workdir_root: Option<std::path::PathBuf>,
+    /// Specific files to run (if None, discover all .txt files)
+    pub files: Option<Vec<String>>,
 }
 
 impl RunParams {
@@ -58,6 +60,7 @@ impl RunParams {
             update_scripts,
             preserve_work_on_failure: false,
             workdir_root: None,
+            files: None,
         }
     }
 
@@ -100,6 +103,19 @@ impl RunParams {
     /// instead of the system default temporary directory.
     pub fn workdir_root<P: Into<std::path::PathBuf>>(mut self, root: P) -> Self {
         self.workdir_root = Some(root.into());
+        self
+    }
+
+    /// Set specific files to run instead of discovering all .txt files
+    ///
+    /// When specified, only these files will be executed instead of discovering
+    /// all .txt files in the directory.
+    pub fn files<I, S>(mut self, files: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.files = Some(files.into_iter().map(|s| s.into()).collect());
         self
     }
 

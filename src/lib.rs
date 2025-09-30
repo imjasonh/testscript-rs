@@ -21,28 +21,68 @@ pub use run::run_test;
 fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
     use walkdir::WalkDir;
 
-    // Simple glob pattern matching - for now just handle basic patterns like "testdata/*.txt"
-    let (base_dir, pattern) = if let Some(slash_pos) = test_data_glob.rfind('/') {
-        let base_dir = &test_data_glob[..slash_pos];
-        let pattern = &test_data_glob[slash_pos + 1..];
-        (base_dir, pattern)
-    } else {
-        (".", test_data_glob)
-    };
-
-    // Convert glob pattern to a simple matcher
-    let pattern_regex = pattern.replace("*", ".*");
-    let regex = regex::Regex::new(&format!("^{}$", pattern_regex))?;
-
     let mut test_files = Vec::new();
 
-    // Walk the directory and collect matching files
-    for entry in WalkDir::new(base_dir).min_depth(1).max_depth(1) {
-        let entry = entry?;
-        if entry.file_type().is_file() {
-            if let Some(file_name) = entry.file_name().to_str() {
-                if regex.is_match(file_name) {
-                    test_files.push(entry.path().to_path_buf());
+    // If specific files are provided, use them directly
+    if let Some(ref files) = params.files {
+        // Parse the base directory from the glob pattern
+        let base_dir = if let Some(slash_pos) = test_data_glob.rfind('/') {
+            &test_data_glob[..slash_pos]
+        } else {
+            "."
+        };
+
+        for file in files {
+            let file_path = if file.starts_with('/') {
+                // Absolute path - use as-is
+                std::path::PathBuf::from(file)
+            } else if file.contains('/') {
+                // Relative path - resolve relative to base directory
+                std::path::PathBuf::from(base_dir).join(file)
+            } else {
+                // Just a filename - look in the base directory
+                std::path::PathBuf::from(base_dir).join(file)
+            };
+
+            // Validate that the file exists
+            if !file_path.exists() {
+                return Err(Error::Generic(format!(
+                    "Test file not found: {}",
+                    file_path.display()
+                )));
+            }
+
+            if !file_path.is_file() {
+                return Err(Error::Generic(format!(
+                    "Path is not a file: {}",
+                    file_path.display()
+                )));
+            }
+
+            test_files.push(file_path);
+        }
+    } else {
+        // Use the original glob-based discovery
+        let (base_dir, pattern) = if let Some(slash_pos) = test_data_glob.rfind('/') {
+            let base_dir = &test_data_glob[..slash_pos];
+            let pattern = &test_data_glob[slash_pos + 1..];
+            (base_dir, pattern)
+        } else {
+            (".", test_data_glob)
+        };
+
+        // Convert glob pattern to a simple matcher
+        let pattern_regex = pattern.replace("*", ".*");
+        let regex = regex::Regex::new(&format!("^{}$", pattern_regex))?;
+
+        // Walk the directory and collect matching files
+        for entry in WalkDir::new(base_dir).min_depth(1).max_depth(1) {
+            let entry = entry?;
+            if entry.file_type().is_file() {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    if regex.is_match(file_name) {
+                        test_files.push(entry.path().to_path_buf());
+                    }
                 }
             }
         }
@@ -52,10 +92,14 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
     test_files.sort();
 
     if test_files.is_empty() {
-        return Err(Error::Generic(format!(
-            "No test files found matching pattern: {}",
-            test_data_glob
-        )));
+        if params.files.is_some() {
+            return Err(Error::Generic("No test files specified".to_string()));
+        } else {
+            return Err(Error::Generic(format!(
+                "No test files found matching pattern: {}",
+                test_data_glob
+            )));
+        }
     }
 
     // Run each test file
@@ -91,6 +135,17 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///
 /// // Simple usage - all conditions detected automatically
 /// testscript::run("testdata").execute().unwrap();
+/// ```
+///
+/// ### Running Specific Test Files
+/// ```no_run
+/// use testscript_rs::testscript;
+///
+/// // Run only specific test files instead of all .txt files
+/// testscript::run("testdata")
+///     .files(["hello.txt", "exists.txt"])
+///     .execute()
+///     .unwrap();
 /// ```
 ///
 /// ### With Custom Setup and Work Directory Preservation
@@ -276,6 +331,49 @@ impl Builder {
         self
     }
 
+    /// Run only specific test files instead of discovering all .txt files
+    ///
+    /// When specified, only these files will be executed instead of discovering
+    /// all .txt files in the directory. Files can be specified as:
+    /// - Relative paths (relative to the test directory): `"hello.txt"`
+    /// - Absolute paths: `"/path/to/test.txt"`
+    /// - Just filenames: `"test.txt"` (looked up in the test directory)
+    ///
+    /// # Arguments
+    /// * `files` - An iterator of file paths to run
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use testscript_rs::testscript;
+    ///
+    /// // Run specific test files
+    /// testscript::run("testdata")
+    ///     .files(["hello.txt", "exists.txt"])
+    ///     .execute()
+    ///     .unwrap();
+    ///
+    /// // Using Vec<String>
+    /// let test_files = vec!["hello.txt".to_string(), "exists.txt".to_string()];
+    /// testscript::run("testdata")
+    ///     .files(test_files)
+    ///     .execute()
+    ///     .unwrap();
+    /// ```
+    ///
+    /// # Benefits
+    /// - **Selective testing**: Run only specific test scenarios
+    /// - **Faster development**: Skip unrelated tests during development
+    /// - **CI optimization**: Run subsets of tests in different jobs
+    /// - **Go compatibility**: Match Go testscript functionality
+    pub fn files<I, S>(mut self, files: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.params = self.params.files(files);
+        self
+    }
+
     /// Execute all test scripts in the configured directory
     ///
     /// This will discover all `.txt` files in the directory and run them as test scripts.
@@ -300,6 +398,12 @@ impl Builder {
 ///
 /// // Run all tests in testdata directory
 /// testscript::run("testdata").execute().unwrap();
+///
+/// // Run only specific test files
+/// testscript::run("testdata")
+///     .files(["hello.txt", "exists.txt"])
+///     .execute()
+///     .unwrap();
 /// ```
 pub mod testscript {
     use super::*;
