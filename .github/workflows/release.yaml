@@ -11,8 +11,6 @@ jobs:
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     steps:
     - uses: actions/checkout@v4
 
@@ -42,11 +40,8 @@ jobs:
           exit 1
         fi
 
-    - run: cargo test --verbose
+    - name: Run tests
+      run: cargo test --verbose
 
-    - id: auth
-      uses: rust-lang/crates-io-auth-action@v1
-
-    - run: cargo publish
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+    - name: Publish to crates.io
+      run: cargo publish --token ${{ secrets.CARGO_TOKEN }}
