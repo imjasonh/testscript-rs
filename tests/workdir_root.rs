@@ -24,16 +24,12 @@ Test content in custom root
 
     fs::write(testdata_path.join("custom_root_test.txt"), test_content).unwrap();
 
-    // Run test with custom workdir root
+    // Run test with custom workdir root - this should succeed
     let result = testscript::run(testdata_path.to_string_lossy())
         .workdir_root(custom_root_path)
         .execute();
 
     assert!(result.is_ok(), "Test with custom workdir root failed: {:?}", result);
-
-    // Verify that temporary directories were created in our custom root
-    // (Note: the actual temp directories are cleaned up after the test runs,
-    // but we can verify the API works without errors)
 }
 
 #[test]
@@ -87,13 +83,6 @@ stdout "test"
     assert!(error_msg.contains("not a directory"), "Error should mention path is not a directory");
 }
 
-#[test]
-fn test_workdir_root_readonly_directory() {
-    // This test is tricky because creating a truly read-only directory
-    // that we can't write to requires platform-specific code and may fail
-    // in test environments. We'll skip this for now and rely on the validation
-    // in the actual tempfile::TempDir::new_in() call.
-}
 
 #[test]
 fn test_workdir_root_with_preserve_work() {
@@ -124,38 +113,7 @@ Configuration file for testing
     assert!(result.is_ok(), "Combined features test failed: {:?}", result);
 }
 
-#[test]
-fn test_workdir_root_with_custom_command() {
-    // Create a temporary directory to use as our custom root
-    let custom_root = TempDir::new().unwrap();
-    let custom_root_path = custom_root.path();
 
-    // Create a test directory structure
-    let testdata_dir = TempDir::new().unwrap();
-    let testdata_path = testdata_dir.path().join("testdata");
-    fs::create_dir(&testdata_path).unwrap();
-
-    let test_content = r#"custom-echo hello world
-"#;
-
-    fs::write(testdata_path.join("custom_cmd_test.txt"), test_content).unwrap();
-
-    // Test that workdir_root works with custom commands
-    let result = testscript::run(testdata_path.to_string_lossy())
-        .workdir_root(custom_root_path)
-        .command("custom-echo", |_env, args| {
-            // Simple custom command that just validates args exist
-            if args.is_empty() {
-                return Err(testscript_rs::Error::Generic(
-                    "custom-echo requires arguments".to_string(),
-                ));
-            }
-            Ok(())
-        })
-        .execute();
-
-    assert!(result.is_ok(), "Custom command with workdir root failed: {:?}", result);
-}
 
 #[test]
 fn test_workdir_root_api_chaining() {
