@@ -38,7 +38,7 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
     let script_file = script_path.to_string_lossy().to_string();
 
     // Create test environment
-    let mut env = TestEnvironment::new()?;
+    let mut env = TestEnvironment::new_with_root(params.workdir_root.as_deref())?;
 
     // Set up files from the script
     env.setup_files(&script.files)?;

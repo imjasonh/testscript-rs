@@ -120,6 +120,18 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///     true
 /// }
 /// ```
+///
+/// ### With Custom Work Directory Root
+/// ```no_run
+/// use testscript_rs::testscript;
+///
+/// // Use a custom location for test working directories
+/// testscript::run("testdata")
+///     .workdir_root("/tmp/my-app-tests")
+///     .preserve_work_on_failure(true)  // Combine features
+///     .execute()
+///     .unwrap();
+/// ```
 pub struct Builder {
     dir: String,
     params: RunParams,
@@ -226,6 +238,41 @@ impl Builder {
     /// ```
     pub fn preserve_work_on_failure(mut self, preserve: bool) -> Self {
         self.params = self.params.preserve_work_on_failure(preserve);
+        self
+    }
+
+    /// Set the root directory for test working directories
+    ///
+    /// When specified, test directories will be created inside this root directory
+    /// instead of the system default temporary directory. This is useful for:
+    /// - **Debugging**: Use a known location for test directories
+    /// - **Performance**: Use faster storage (e.g., tmpfs on Linux)
+    /// - **CI environments**: Use specific temp locations
+    /// - **Security**: Isolate test directories to specific paths
+    ///
+    /// # Arguments
+    /// * `root` - The directory path where test working directories should be created
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use testscript_rs::testscript;
+    ///
+    /// // Use custom location for test directories
+    /// testscript::run("testdata")
+    ///     .workdir_root("/tmp/my-app-tests")
+    ///     .preserve_work_on_failure(true)  // Combine with other features
+    ///     .execute()
+    ///     .unwrap();
+    /// ```
+    ///
+    /// This creates test directories like `/tmp/my-app-tests/testscript-abc123/`.
+    ///
+    /// # Notes
+    /// - The root directory must exist and be writable
+    /// - If not specified, uses the system default temporary directory
+    /// - Each test still gets its own isolated subdirectory
+    pub fn workdir_root<P: Into<std::path::PathBuf>>(mut self, root: P) -> Self {
+        self.params = self.params.workdir_root(root);
         self
     }
 

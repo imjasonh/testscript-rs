@@ -20,6 +20,12 @@ cargo test parser::tests::
 # Run single test
 cargo test test_basic_api
 
+# Format code (always run before committing)
+cargo fmt
+
+# Check code formatting
+cargo fmt --check
+
 # Check code quality
 cargo clippy --all-targets -- -D warnings
 cargo check
