@@ -15,8 +15,9 @@ fn test_workdir_root_basic_functionality() {
     let testdata_path = testdata_dir.path().join("testdata");
     fs::create_dir(&testdata_path).unwrap();
 
-    let test_content = r#"exec echo "hello from custom root"
-stdout "hello from custom root"
+    // Create a test that will fail due to mismatched stdout expectation
+    let test_content = r#"exec echo "hello"
+stdout "goodbye"
 
 -- test_file.txt --
 Test content in custom root
@@ -24,15 +25,51 @@ Test content in custom root
 
     fs::write(testdata_path.join("custom_root_test.txt"), test_content).unwrap();
 
-    // Run test with custom workdir root - this should succeed
+    // Run test with custom workdir root and preserve work on failure
     let result = testscript::run(testdata_path.to_string_lossy())
         .workdir_root(custom_root_path)
+        .preserve_work_on_failure(true)
         .execute();
 
+    // The test should fail due to the mismatched stdout expectation
     assert!(
-        result.is_ok(),
-        "Test with custom workdir root failed: {:?}",
+        result.is_err(),
+        "Test should fail due to mismatched stdout expectation. Got: {:?}",
         result
+    );
+
+    // Verify that the workdir was created in our custom root and contains expected files
+    let entries: Vec<_> = fs::read_dir(custom_root_path)
+        .expect("Custom root should be readable")
+        .collect::<Result<Vec<_>, _>>()
+        .expect("Should be able to read directory entries");
+
+    assert!(
+        !entries.is_empty(),
+        "Custom root should contain test working directories"
+    );
+
+    // Find the test working directory (should start with a temp directory name)
+    let work_dir = entries
+        .iter()
+        .find(|entry| entry.file_type().unwrap().is_dir())
+        .expect("Should find at least one working directory");
+
+    let work_dir_path = work_dir.path();
+
+    // Verify that the test file was created in the working directory
+    let test_file_path = work_dir_path.join("test_file.txt");
+    assert!(
+        test_file_path.exists(),
+        "test_file.txt should exist in the working directory"
+    );
+
+    let test_file_content =
+        fs::read_to_string(&test_file_path).expect("Should be able to read test_file.txt");
+    assert_eq!(
+        test_file_content.trim(),
+        "Test content in custom root",
+        "Test file should contain expected content"
     );
 }
 
@@ -96,39 +133,6 @@ stdout "test"
     assert!(
         error_msg.contains("not a directory"),
         "Error should mention path is not a directory"
-    );
-}
-
-#[test]
-fn test_workdir_root_with_preserve_work() {
-    // Create a temporary directory to use as our custom root
-    let custom_root = TempDir::new().unwrap();
-    let custom_root_path = custom_root.path();
-
-    // Create a test directory structure
-    let testdata_dir = TempDir::new().unwrap();
-    let testdata_path = testdata_dir.path().join("testdata");
-    fs::create_dir(&testdata_path).unwrap();
-
-    let test_content = r#"exec echo "combined features test"
-stdout "combined features test"
-
--- config.txt --
-Configuration file for testing
-"#;
-
-    fs::write(testdata_path.join("combined_test.txt"), test_content).unwrap();
-
-    // Test that workdir_root can be combined with other features
-    let result = testscript::run(testdata_path.to_string_lossy())
-        .workdir_root(custom_root_path)
-        .preserve_work_on_failure(true)
-        .execute();
-
-    assert!(
-        result.is_ok(),
-        "Combined features test failed: {:?}",
-        result
     );
 }
 
