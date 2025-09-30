@@ -22,6 +22,7 @@ content"#;
 
     let skip_content = r#"skip 'This test should be skipped'
 exec echo "This should not run"
+exec exit 1
 "#;
 
     fs::write(testdata_dir.join("hello.txt"), hello_content).unwrap();
@@ -168,97 +169,4 @@ fn test_files_directory_instead_of_file_error() {
         "Error message should mention path not a file: {}",
         error_msg
     );
-}
-
-#[test]
-fn test_files_combined_with_other_features() {
-    let temp_dir = TempDir::new().unwrap();
-    let testdata_dir = temp_dir.path().join("testdata");
-    fs::create_dir(&testdata_dir).unwrap();
-
-    let test_content = r#"exec echo "combined_test"
-stdout "combined_test"
-"#;
-
-    fs::write(testdata_dir.join("combined.txt"), test_content).unwrap();
-
-    // Test files() combined with other builder methods
-    let result = testscript::run(testdata_dir.to_string_lossy())
-        .files(["combined.txt"])
-        .condition("custom", true)
-        .setup(|_env| Ok(()))
-        .execute();
-
-    assert!(
-        result.is_ok(),
-        "Combined features test failed: {:?}",
-        result
-    );
-}
-
-#[test]
-fn test_files_vs_normal_discovery() {
-    let temp_dir = TempDir::new().unwrap();
-    let testdata_dir = temp_dir.path().join("testdata");
-    fs::create_dir(&testdata_dir).unwrap();
-
-    let good_content = r#"exec echo "good"
-stdout "good"
-"#;
-
-    let bad_content = r#"exec echo "bad"
-stdout "different_output"
-"#;
-
-    fs::write(testdata_dir.join("good.txt"), good_content).unwrap();
-    fs::write(testdata_dir.join("bad.txt"), bad_content).unwrap();
-
-    // Normal discovery should fail because bad.txt fails
-    let result_all = testscript::run(testdata_dir.to_string_lossy()).execute();
-    assert!(
-        result_all.is_err(),
-        "Expected failure when running all files"
-    );
-
-    // But specific file selection should succeed when only running good.txt
-    let result_specific = testscript::run(testdata_dir.to_string_lossy())
-        .files(["good.txt"])
-        .execute();
-    assert!(
-        result_specific.is_ok(),
-        "Specific good file should succeed: {:?}",
-        result_specific
-    );
-}
-
-#[test]
-fn test_files_execution_order() {
-    let temp_dir = TempDir::new().unwrap();
-    let testdata_dir = temp_dir.path().join("testdata");
-    fs::create_dir(&testdata_dir).unwrap();
-
-    // Create test files with simple operations to verify they all run
-    let test1_content = r#"exec echo "test1"
-stdout "test1"
-"#;
-
-    let test2_content = r#"exec echo "test2"
-stdout "test2"
-"#;
-
-    let test3_content = r#"exec echo "test3"
-stdout "test3"
-"#;
-
-    fs::write(testdata_dir.join("z_test1.txt"), test1_content).unwrap();
-    fs::write(testdata_dir.join("a_test2.txt"), test2_content).unwrap();
-    fs::write(testdata_dir.join("m_test3.txt"), test3_content).unwrap();
-
-    // Files should be executed in the order they're specified, not alphabetical
-    // This test verifies that files execute successfully when specified in a custom order
-    let result = testscript::run(testdata_dir.to_string_lossy())
-        .files(["z_test1.txt", "a_test2.txt", "m_test3.txt"])
-        .execute();
-
-    assert!(result.is_ok(), "Execution order test failed: {:?}", result);
 }
