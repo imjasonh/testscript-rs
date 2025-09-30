@@ -34,7 +34,37 @@ pub struct TestEnvironment {
 impl TestEnvironment {
     /// Create a new test environment with a temporary directory
     pub fn new() -> Result<Self> {
-        let temp_dir = tempfile::tempdir()?;
+        Self::new_with_root(None)
+    }
+
+    /// Create a new test environment with a temporary directory in the specified root
+    pub fn new_with_root(workdir_root: Option<&std::path::Path>) -> Result<Self> {
+        let temp_dir = match workdir_root {
+            Some(root) => {
+                // Validate that the root directory exists and is writable
+                if !root.exists() {
+                    return Err(Error::Generic(format!(
+                        "Workdir root directory does not exist: {}",
+                        root.display()
+                    )));
+                }
+                if !root.is_dir() {
+                    return Err(Error::Generic(format!(
+                        "Workdir root path is not a directory: {}",
+                        root.display()
+                    )));
+                }
+                // Test if the directory is writable by creating a temp directory
+                tempfile::TempDir::new_in(root).map_err(|e| {
+                    Error::Generic(format!(
+                        "Cannot create temporary directory in workdir root {}: {}",
+                        root.display(),
+                        e
+                    ))
+                })?
+            }
+            None => tempfile::tempdir()?,
+        };
         let work_dir = temp_dir.path().to_path_buf();
 
         Ok(TestEnvironment {

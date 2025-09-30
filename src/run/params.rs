@@ -22,6 +22,8 @@ pub struct RunParams {
     pub update_scripts: bool,
     /// Whether to preserve working directories when tests fail
     pub preserve_work_on_failure: bool,
+    /// Optional root directory for test working directories
+    pub workdir_root: Option<std::path::PathBuf>,
 }
 
 impl RunParams {
@@ -55,6 +57,7 @@ impl RunParams {
             conditions,
             update_scripts,
             preserve_work_on_failure: false,
+            workdir_root: None,
         }
     }
 
@@ -88,6 +91,15 @@ impl RunParams {
     /// Set whether to preserve working directories when tests fail
     pub fn preserve_work_on_failure(mut self, preserve: bool) -> Self {
         self.preserve_work_on_failure = preserve;
+        self
+    }
+
+    /// Set the root directory for test working directories
+    ///
+    /// When specified, test directories will be created inside this root directory
+    /// instead of the system default temporary directory.
+    pub fn workdir_root<P: Into<std::path::PathBuf>>(mut self, root: P) -> Self {
+        self.workdir_root = Some(root.into());
         self
     }
 
