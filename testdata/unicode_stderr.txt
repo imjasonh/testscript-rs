@@ -1,0 +1,3 @@
+# Test Unicode checkmark in stderr exact match
+exec sh -c 'echo "Error ✗" >&2'
+stderr "Error ✗"

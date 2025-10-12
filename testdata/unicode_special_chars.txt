@@ -1,0 +1,3 @@
+# Test Unicode with regex special characters
+exec echo "Result: ✓ (success)"
+stdout "Result: ✓ \(success\)"

@@ -236,7 +236,9 @@ impl TestEnvironment {
             || expected_substituted.contains('*')
             || expected_substituted.contains('.')
         {
-            let regex_pattern = format!("(?s){}", expected_substituted); // (?s) enables DOTALL mode
+            // Enable DOTALL mode (?s) for . to match newlines
+            // Enable Unicode mode (?u) for proper Unicode character matching
+            let regex_pattern = format!("(?su){}", expected_substituted);
             let regex = Regex::new(&regex_pattern)
                 .map_err(|e| Error::command_error(output_type, format!("Invalid regex: {}", e)))?;
 

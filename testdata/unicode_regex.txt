@@ -1,0 +1,3 @@
+# Test Unicode in regex pattern
+exec echo "Success ✓ completed"
+stdout "Success .* completed"
