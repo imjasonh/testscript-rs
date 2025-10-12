@@ -218,7 +218,14 @@ impl TestEnvironment {
 
     /// Search for a pattern in files (like grep)
     pub fn grep_files(&mut self, pattern: &str, files: &[String]) -> Result<()> {
-        let regex = Regex::new(pattern)
+        // Enable Unicode mode for proper Unicode character matching in grep patterns
+        let pattern_with_flags = if pattern.starts_with("(?") {
+            // Pattern already has flags, don't add more
+            pattern.to_string()
+        } else {
+            format!("(?u){}", pattern)
+        };
+        let regex = Regex::new(&pattern_with_flags)
             .map_err(|e| Error::command_error("grep", format!("Invalid regex: {}", e)))?;
 
         let mut _found_matches = false;

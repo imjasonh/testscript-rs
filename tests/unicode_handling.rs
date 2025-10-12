@@ -19,7 +19,7 @@ stdout "Success ✓"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     assert!(
         result.is_ok(),
         "Unicode stdout exact match should work: {:?}",
@@ -42,7 +42,7 @@ stderr "Error ✗"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     assert!(
         result.is_ok(),
         "Unicode stderr exact match should work: {:?}",
@@ -65,7 +65,7 @@ stdout "Success .* completed"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     assert!(
         result.is_ok(),
         "Unicode in regex pattern should work: {:?}",
@@ -88,7 +88,7 @@ stdout "Tests: ✓ ✗ ⚠ ℹ"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     assert!(
         result.is_ok(),
         "Multiple Unicode characters should work: {:?}",
@@ -111,12 +111,8 @@ stdout "Status: 🎉 Success!"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
-    assert!(
-        result.is_ok(),
-        "Emoji in output should work: {:?}",
-        result
-    );
+
+    assert!(result.is_ok(), "Emoji in output should work: {:?}", result);
 }
 
 #[test]
@@ -134,7 +130,7 @@ stdout "Result: ✓ \(success\)"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     assert!(
         result.is_ok(),
         "Unicode with regex special chars should work: {:?}",
@@ -157,10 +153,36 @@ stdout "A.B"
     fs::write(&test_file, test_content).unwrap();
 
     let result = testscript::run(testdata_dir.to_string_lossy()).execute();
-    
+
     assert!(
         result.is_ok(),
         "Dot in regex should match Unicode character: {:?}",
+        result
+    );
+}
+
+#[test]
+fn test_grep_with_unicode() {
+    let temp_dir = TempDir::new().unwrap();
+    let testdata_dir = temp_dir.path().join("testdata");
+    fs::create_dir(&testdata_dir).unwrap();
+
+    // Test grep command with Unicode content
+    let test_content = r#"grep "Success.*✓" test.txt
+stdout "test.txt:1: Success ✓"
+
+-- test.txt --
+Success ✓
+"#;
+
+    let test_file = testdata_dir.join("grep_unicode_test.txt");
+    fs::write(&test_file, test_content).unwrap();
+
+    let result = testscript::run(testdata_dir.to_string_lossy()).execute();
+
+    assert!(
+        result.is_ok(),
+        "Grep with Unicode should work: {:?}",
         result
     );
 }

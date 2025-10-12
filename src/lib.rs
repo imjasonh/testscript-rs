@@ -71,9 +71,9 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
             (".", test_data_glob)
         };
 
-        // Convert glob pattern to a simple matcher
+        // Convert glob pattern to a simple matcher with Unicode support
         let pattern_regex = pattern.replace("*", ".*");
-        let regex = regex::Regex::new(&format!("^{}$", pattern_regex))?;
+        let regex = regex::Regex::new(&format!("(?u)^{}$", pattern_regex))?;
 
         // Walk the directory and collect matching files
         for entry in WalkDir::new(base_dir).min_depth(1).max_depth(1) {
