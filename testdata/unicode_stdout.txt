@@ -1,0 +1,3 @@
+# Test Unicode checkmark in stdout exact match
+exec echo "Success ✓"
+stdout "Success ✓"

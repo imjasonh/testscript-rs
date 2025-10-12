@@ -1,0 +1,6 @@
+# Test grep command with Unicode content
+grep "Success.*✓" test.txt
+stdout "test.txt:1: Success ✓"
+
+-- test.txt --
+Success ✓

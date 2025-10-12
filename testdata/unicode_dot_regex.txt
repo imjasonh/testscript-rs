@@ -1,0 +1,3 @@
+# Test if . in regex matches Unicode characters
+exec echo "A✓B"
+stdout "A.B"

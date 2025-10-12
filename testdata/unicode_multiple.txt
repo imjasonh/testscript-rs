@@ -1,0 +1,3 @@
+# Test multiple Unicode characters
+exec echo "Tests: ✓ ✗ ⚠ ℹ"
+stdout "Tests: ✓ ✗ ⚠ ℹ"
