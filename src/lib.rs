@@ -154,6 +154,10 @@ fn run(params: &mut RunParams, test_data_glob: &str) -> Result<()> {
 ///
 /// testscript::run("testdata")
 ///     .setup(|env| {
+///         // Set environment variables for your CLI
+///         env.set_env_var("MY_APP_MODE", "testing");
+///         env.set_env_var("LOG_LEVEL", "debug");
+///         
 ///         // Compile your CLI tool
 ///         std::process::Command::new("cargo")
 ///             .args(["build", "--bin", "my-cli"])
@@ -203,11 +207,30 @@ impl Builder {
 
     /// Add a setup function that runs before each test script
     ///
-    /// The setup function receives a reference to the test environment and can
-    /// perform actions like compiling binaries or setting up test data.
+    /// The setup function receives a mutable reference to the test environment and can
+    /// perform actions like compiling binaries, setting up test data, or setting environment variables.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use testscript_rs::testscript;
+    ///
+    /// testscript::run("testdata")
+    ///     .setup(|env| {
+    ///         // Set an environment variable
+    ///         env.set_env_var("FOO", "bar");
+    ///         
+    ///         // Compile a binary
+    ///         std::process::Command::new("cargo")
+    ///             .args(["build", "--bin", "my-cli"])
+    ///             .status()?;
+    ///         Ok(())
+    ///     })
+    ///     .execute()
+    ///     .unwrap();
+    /// ```
     pub fn setup<F>(mut self, func: F) -> Self
     where
-        F: Fn(&TestEnvironment) -> Result<()> + 'static,
+        F: Fn(&mut TestEnvironment) -> Result<()> + 'static,
     {
         self.params = self.params.setup(func);
         self

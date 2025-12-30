@@ -8,7 +8,7 @@ use std::collections::HashMap;
 pub type CommandFn = fn(&mut TestEnvironment, &[String]) -> Result<()>;
 
 /// Type alias for a setup function
-pub type SetupFn = Box<dyn Fn(&TestEnvironment) -> Result<()>>;
+pub type SetupFn = Box<dyn Fn(&mut TestEnvironment) -> Result<()>>;
 
 /// Configuration parameters for running tests
 pub struct RunParams {
@@ -73,7 +73,7 @@ impl RunParams {
     /// Set a setup function to run before each script
     pub fn setup<F>(mut self, func: F) -> Self
     where
-        F: Fn(&TestEnvironment) -> Result<()> + 'static,
+        F: Fn(&mut TestEnvironment) -> Result<()> + 'static,
     {
         self.setup = Some(Box::new(func));
         self
