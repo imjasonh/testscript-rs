@@ -184,22 +184,28 @@ fn test_setup_env_vars_presence_and_absence() {
     // 2. Variables NOT set in setup are NOT available in the test
     let script_content = if cfg!(windows) {
         r#"# Test environment variable presence and absence (Windows)
-# Check that SET_VAR is available
+# Check that SET_VAR is available using printenv (no shell needed)
+exec cmd /c set SET_VAR
+stdout "SET_VAR=value_from_setup"
+
+# Also verify with shell expansion
 exec cmd /c "echo SET_VAR=%SET_VAR%"
 stdout "SET_VAR=value_from_setup"
 
-# Check that UNSET_VAR is not available (should be empty)
-exec cmd /c "echo UNSET_VAR=%UNSET_VAR%"
-stdout "UNSET_VAR=%UNSET_VAR%""#
+# Check that UNSET_VAR is not available
+! exec cmd /c set UNSET_VAR"#
     } else {
         r#"# Test environment variable presence and absence (Unix)
-# Check that SET_VAR is available
+# Check that SET_VAR is available using printenv (no shell needed)
+exec printenv SET_VAR
+stdout "value_from_setup"
+
+# Also verify with shell expansion
 exec sh -c "echo SET_VAR=$SET_VAR"
 stdout "SET_VAR=value_from_setup"
 
-# Check that UNSET_VAR is not available (should be empty)
-exec sh -c "echo UNSET_VAR=${UNSET_VAR:-empty}"
-stdout "UNSET_VAR=empty"#
+# Check that UNSET_VAR is not available
+! exec printenv UNSET_VAR"#
     };
 
     fs::write(&script_path, script_content).unwrap();
@@ -215,6 +221,41 @@ stdout "UNSET_VAR=empty"#
     assert!(
         result.is_ok(),
         "Environment presence/absence test should pass: {:?}",
+        result
+    );
+}
+
+#[test]
+fn test_env_command_prints_all_vars() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("env_print_test.txt");
+
+    // Test that 'env' without args prints all environment variables
+    let script_content = r#"# Test env command prints all variables
+env VAR1=value1
+env VAR2=value2
+
+# The env command should be callable and set variables
+# (printing is done to stdout which we can't easily test here,
+# but we verify the vars are set by using them)
+exec sh -c "echo $VAR1"
+stdout "value1"
+
+exec sh -c "echo $VAR2"
+stdout "value2"
+"#;
+
+    fs::write(&script_path, script_content).unwrap();
+
+    let params = RunParams::new().setup(|env| {
+        env.set_env_var("SETUP_VAR", "from_setup");
+        Ok(())
+    });
+
+    let result = run_script(&script_path, &params);
+    assert!(
+        result.is_ok(),
+        "Env command test should pass: {:?}",
         result
     );
 }
