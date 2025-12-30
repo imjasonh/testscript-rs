@@ -49,7 +49,7 @@ pub fn run_script_impl(script_path: &Path, params: &RunParams) -> Result<()> {
 
     // Run setup hook if provided
     if let Some(setup) = &params.setup {
-        setup(&env)?;
+        setup(&mut env)?;
     }
 
     // Track script updates if we're in update mode

@@ -44,6 +44,9 @@ use testscript_rs::testscript;
 fn test_my_cli() {
     testscript::run("testdata")
         .setup(|env| {
+            // Set environment variables for tests
+            env.set_env_var("MY_APP_CONFIG", "/path/to/config");
+            
             // Compile your CLI tool
             std::process::Command::new("cargo")
                 .args(["build", "--bin", "my-cli"])

@@ -87,37 +87,68 @@ fn test_setup_hook_environment() {
     let temp_dir = TempDir::new().unwrap();
     let script_path = temp_dir.path().join("env_test.txt");
 
-    let script_content = r#"# Test setup hook can modify environment
-env TEST_FROM_SETUP=should_be_set
-exec echo "Value: $TEST_FROM_SETUP"
-stdout "Value: hello_from_setup""#;
+    // Use sh -c to allow shell variable expansion
+    let script_content = if cfg!(windows) {
+        r#"# Test setup hook can modify environment (Windows)
+exec cmd /c "echo Value: %TEST_FROM_SETUP%"
+stdout "Value: hello_from_setup""#
+    } else {
+        r#"# Test setup hook can modify environment (Unix)
+exec sh -c "echo Value: $TEST_FROM_SETUP"
+stdout "Value: hello_from_setup"
+"#
+    };
 
     fs::write(&script_path, script_content).unwrap();
 
     // Create RunParams with setup hook that sets an environment variable
     let params = RunParams::new().setup(|env| {
-        // The setup hook has access to the TestEnvironment but can't modify it
-        // This demonstrates the current API limitation - we can access but not modify
-        println!("Setup running in: {}", env.work_dir.display());
-
-        // We could write files that contain environment setup
-        let env_script = env.work_dir.join("setup_env.sh");
-        std::fs::write(&env_script, "export TEST_FROM_SETUP=hello_from_setup")?;
+        // Now we can modify the environment directly in the setup hook
+        env.set_env_var("TEST_FROM_SETUP", "hello_from_setup");
         Ok(())
     });
 
-    let mut params = params;
-    // Manually set the environment variable for this test
-    params = params.condition("TEST_FROM_SETUP", true);
+    let result = run_script(&script_path, &params);
+    assert!(
+        result.is_ok(),
+        "Environment setup test should pass: {:?}",
+        result
+    );
+}
+
+#[test]
+fn test_setup_hook_multiple_env_vars() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("multi_env_test.txt");
+
+    // Use sh -c to allow shell variable expansion
+    let script_content = if cfg!(windows) {
+        r#"# Test setup hook can set multiple environment variables (Windows)
+exec cmd /c "echo FOO=%FOO% BAR=%BAR% BAZ=%BAZ%"
+stdout "FOO=value1 BAR=value2 BAZ=value3""#
+    } else {
+        r#"# Test setup hook can set multiple environment variables (Unix)
+exec sh -c "echo FOO=$FOO BAR=$BAR BAZ=$BAZ"
+stdout "FOO=value1 BAR=value2 BAZ=value3"
+"#
+    };
+
+    fs::write(&script_path, script_content).unwrap();
+
+    // Create RunParams with setup hook that sets multiple environment variables
+    let params = RunParams::new().setup(|env| {
+        env.set_env_var("FOO", "value1");
+        env.set_env_var("BAR", "value2");
+        env.set_env_var("BAZ", "value3");
+        Ok(())
+    });
 
     let result = run_script(&script_path, &params);
-    // This test demonstrates the current limitation - setup can't modify the running environment
-    if result.is_err() {
-        println!(
-            "Environment setup test failed (expected with current API): {:?}",
-            result
-        );
-    }
+    assert!(
+        result.is_ok(),
+        "Multiple environment variables test should pass: {:?}",
+        result
+    );
 }
 
 #[test]
