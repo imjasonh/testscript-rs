@@ -253,9 +253,5 @@ stdout "value2"
     });
 
     let result = run_script(&script_path, &params);
-    assert!(
-        result.is_ok(),
-        "Env command test should pass: {:?}",
-        result
-    );
+    assert!(result.is_ok(), "Env command test should pass: {:?}", result);
 }
