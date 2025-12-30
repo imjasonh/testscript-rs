@@ -173,3 +173,48 @@ exec echo "Should not execute""#;
         .to_string()
         .contains("Setup deliberately failed"));
 }
+
+#[test]
+fn test_setup_env_vars_presence_and_absence() {
+    let temp_dir = TempDir::new().unwrap();
+    let script_path = temp_dir.path().join("env_presence_test.txt");
+
+    // Test that verifies:
+    // 1. Variables set in setup ARE available in the test
+    // 2. Variables NOT set in setup are NOT available in the test
+    let script_content = if cfg!(windows) {
+        r#"# Test environment variable presence and absence (Windows)
+# Check that SET_VAR is available
+exec cmd /c "echo SET_VAR=%SET_VAR%"
+stdout "SET_VAR=value_from_setup"
+
+# Check that UNSET_VAR is not available (should be empty)
+exec cmd /c "echo UNSET_VAR=%UNSET_VAR%"
+stdout "UNSET_VAR=%UNSET_VAR%""#
+    } else {
+        r#"# Test environment variable presence and absence (Unix)
+# Check that SET_VAR is available
+exec sh -c "echo SET_VAR=$SET_VAR"
+stdout "SET_VAR=value_from_setup"
+
+# Check that UNSET_VAR is not available (should be empty)
+exec sh -c "echo UNSET_VAR=${UNSET_VAR:-empty}"
+stdout "UNSET_VAR=empty"#
+    };
+
+    fs::write(&script_path, script_content).unwrap();
+
+    // Create RunParams with setup hook that only sets SET_VAR, not UNSET_VAR
+    let params = RunParams::new().setup(|env| {
+        env.set_env_var("SET_VAR", "value_from_setup");
+        // Deliberately NOT setting UNSET_VAR to verify it's not available
+        Ok(())
+    });
+
+    let result = run_script(&script_path, &params);
+    assert!(
+        result.is_ok(),
+        "Environment presence/absence test should pass: {:?}",
+        result
+    );
+}
