@@ -95,8 +95,7 @@ stdout "Value: hello_from_setup""#
     } else {
         r#"# Test setup hook can modify environment (Unix)
 exec sh -c "echo Value: $TEST_FROM_SETUP"
-stdout "Value: hello_from_setup"
-"#
+stdout "Value: hello_from_setup"#
     };
 
     fs::write(&script_path, script_content).unwrap();
@@ -129,8 +128,7 @@ stdout "FOO=value1 BAR=value2 BAZ=value3""#
     } else {
         r#"# Test setup hook can set multiple environment variables (Unix)
 exec sh -c "echo FOO=$FOO BAR=$BAR BAZ=$BAZ"
-stdout "FOO=value1 BAR=value2 BAZ=value3"
-"#
+stdout "FOO=value1 BAR=value2 BAZ=value3"#
     };
 
     fs::write(&script_path, script_content).unwrap();
