@@ -310,14 +310,26 @@ fn execute_command_inner(
             env.compare_files_with_env(&command.args[0], &command.args[1])?;
         }
         "stdout" | "stderr" => {
-            if command.args.len() != 1 {
-                return Err(Error::command_error(
-                    &command.name,
-                    "Expected exactly 1 argument",
-                ));
+            // Parse arguments to handle -count=N option
+            let mut count_option: Option<usize> = None;
+            let mut pattern_arg = None;
+
+            for arg in &command.args {
+                if arg.starts_with("-count=") {
+                    let count_str = &arg[7..]; // Skip "-count="
+                    count_option =
+                        Some(count_str.parse::<usize>().map_err(|_| {
+                            Error::command_error(&command.name, "Invalid count value")
+                        })?);
+                } else if pattern_arg.is_none() {
+                    pattern_arg = Some(arg);
+                } else {
+                    return Err(Error::command_error(&command.name, "Too many arguments"));
+                }
             }
 
-            let expected = &command.args[0];
+            let expected = pattern_arg
+                .ok_or_else(|| Error::command_error(&command.name, "Expected pattern argument"))?;
 
             // Check if argument is a filename or literal text
             let expected_content = if expected == "-" {
@@ -328,10 +340,14 @@ fn execute_command_inner(
                 file_content.trim_end().to_string()
             } else {
                 // It's literal text
-                expected.clone()
+                expected.to_string()
             };
 
-            env.compare_output(&command.name, &expected_content)?;
+            if let Some(count) = count_option {
+                env.compare_output_with_count(&command.name, &expected_content, count)?;
+            } else {
+                env.compare_output(&command.name, &expected_content)?;
+            }
         }
         "cd" => {
             if command.args.len() != 1 {

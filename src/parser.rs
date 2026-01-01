@@ -200,6 +200,7 @@ fn parse_command_tokens(input: &str) -> Result<Vec<String>> {
     let mut current_token = String::new();
     let mut in_quotes = false;
     let mut quote_char = '"';
+    let mut just_closed_quotes = false;
     let mut chars = input.chars().peekable();
 
     while let Some(ch) = chars.next() {
@@ -208,21 +209,26 @@ fn parse_command_tokens(input: &str) -> Result<Vec<String>> {
                 if in_quotes && ch == quote_char {
                     // End of quoted string
                     in_quotes = false;
+                    just_closed_quotes = true;
                 } else if !in_quotes {
                     // Start of quoted string
                     in_quotes = true;
                     quote_char = ch;
+                    just_closed_quotes = false;
                 } else {
                     // Different quote type inside quotes - treat as literal
                     current_token.push(ch);
+                    just_closed_quotes = false;
                 }
             }
             ' ' | '\t' => {
                 if in_quotes {
                     current_token.push(ch);
-                } else if !current_token.is_empty() {
+                    just_closed_quotes = false;
+                } else if !current_token.is_empty() || just_closed_quotes {
                     tokens.push(current_token.clone());
                     current_token.clear();
+                    just_closed_quotes = false;
                 }
             }
             '\\' => {
@@ -262,12 +268,13 @@ fn parse_command_tokens(input: &str) -> Result<Vec<String>> {
             }
             _ => {
                 current_token.push(ch);
+                just_closed_quotes = false;
             }
         }
     }
 
-    // Add final token if any
-    if !current_token.is_empty() {
+    // Add final token if any (including empty tokens that were quoted)
+    if !current_token.is_empty() || just_closed_quotes {
         tokens.push(current_token);
     }
 
@@ -305,6 +312,17 @@ mod tests {
 
         let tokens = parse_command_tokens("stdout 'hello world\\n'").unwrap();
         assert_eq!(tokens, vec!["stdout", "hello world\n"]);
+
+        // Test empty quoted strings
+        let tokens = parse_command_tokens("stdout \"\"").unwrap();
+        assert_eq!(tokens, vec!["stdout", ""]);
+
+        let tokens = parse_command_tokens("stdout ''").unwrap();
+        assert_eq!(tokens, vec!["stdout", ""]);
+
+        // Test mixed empty and non-empty tokens
+        let tokens = parse_command_tokens("exec echo \"\" \"hello\" \"\"").unwrap();
+        assert_eq!(tokens, vec!["exec", "echo", "", "hello", ""]);
     }
 
     #[test]
