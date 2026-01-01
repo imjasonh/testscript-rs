@@ -118,18 +118,18 @@ custom-cmd arg1 arg2 arg3
 
 Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-internal/txtar) format. For complete format documentation, see the [original Go testscript documentation](https://pkg.go.dev/github.com/rogpeppe/go-internal/testscript).
 
-### Built-in Commands
+## Built-in Commands
 
 - **exec** - Execute external commands
 - **cmp** - Compare two files
-- **stdout/stderr** - Check command output (supports regex)
+- **stdout/stderr** - Check command output (supports regex and `-count=N` option)
 - **exists** - Check file existence
 - **mkdir** - Create directories
 - **cp** - Copy files (supports stdout/stderr as source)
 - **mv** - Move/rename files
 - **rm** - Remove files/directories
 - **chmod** - Change file permissions
-- **env** - Set environment variables
+- **env** - Set environment variables (supports `${VAR@R}` regex quoting)
 - **cmpenv** - Compare files with environment variable substitution
 - **stdin** - Set stdin for next command
 - **cd** - Change working directory
@@ -143,9 +143,19 @@ Test scripts use the [`txtar`](https://pkg.go.dev/github.com/rogpeppe/go-interna
 
 Commands can be prefixed with conditions (`[unix]`) or negated (`!`).
 
+### Go testscript Compatibility
+
+testscript-rs implements full compatibility with Go's testscript package, including:
+
+- **`${VAR@R}` syntax** - Escape regex metacharacters in environment variables
+- **`-count=N` option** - Count exact number of matches for stdout/stderr
+- **Regex pattern detection** - Automatic detection based on regex metacharacters
+- **Environment variable substitution** - Full `$VAR` and `${VAR}` support
+- **Whitespace handling** - Matches Go's exact trimming behavior
+
 ## Error Messages
 
-testscript-rs provides detailed error messages with script context to make debugging easy:
+testscript-rs provides detailed, readable error messages with script context to make debugging easy:
 
 ```
 Error in testdata/hello.txt at line 6:
@@ -155,7 +165,48 @@ Error in testdata/hello.txt at line 6:
 > 6 | exec nonexistent-command arg1 arg2
   7 | stdout "should not get here"
   8 |
+
+Command 'nonexistent-command' failed: command not found
 ```
+
+### Output Comparison Errors
+
+When stdout/stderr assertions fail, you get clear, formatted output comparisons:
+
+```
+Error in testdata/test.txt at line 3:
+  1 | exec echo "hello world"
+  2 |
+> 3 | stdout "goodbye world"
+
+Expected: 'goodbye world'
+  Actual: 'hello world'
+```
+
+For multi-line output, line numbers are shown:
+
+```
+Expected:
+  1 | line1
+  2 | expected
+  3 | line3
+
+Actual:
+  1 | line1
+  2 | actual
+  3 | line3
+```
+
+### Optional Color Support
+
+Enable colored error output for terminal-friendly debugging:
+
+```toml
+[dev-dependencies]
+testscript-rs = { version = "<release>", features = ["colors"] }
+```
+
+With colors enabled, the failing line and error details are highlighted in red for easy identification.
 
 > Note: Some features of `testscript` in Go are not supported in this Rust port:
 > 
