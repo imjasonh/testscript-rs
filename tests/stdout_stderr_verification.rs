@@ -34,11 +34,9 @@ stdout "no newline"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Stdout exact match test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Stdout exact match test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -56,11 +54,9 @@ stderr "error no newline"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Stderr exact match test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Stderr exact match test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -88,7 +84,9 @@ stdout "line1.*line2"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Stdout regex test failed: {:?}", result);
+    if let Err(error) = result {
+        panic!("Stdout regex test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -106,7 +104,9 @@ stderr "start.*error.*end"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Stderr regex test failed: {:?}", result);
+    if let Err(error) = result {
+        panic!("Stderr regex test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -130,11 +130,9 @@ stdout "$MSG $NUM test"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Env var substitution test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Env var substitution test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -187,7 +185,9 @@ stdout "中文测试"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Unicode handling test failed: {:?}", result);
+    if let Err(error) = result {
+        panic!("Unicode handling test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -209,7 +209,9 @@ exec sh -c 'true'
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Empty output test failed: {:?}", result);
+    if let Err(error) = result {
+        panic!("Empty output test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -233,7 +235,9 @@ stdout "just newline"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "Newline handling test failed: {:?}", result);
+    if let Err(error) = result {
+        panic!("Newline handling test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -260,7 +264,9 @@ pattern[0-9]+
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(result.is_ok(), "File vs literal test failed: {:?}", result);
+    if let Err(error) = result {
+        panic!("File vs literal test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -281,11 +287,9 @@ stdout "tabs"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Whitespace trimming test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Whitespace trimming test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -369,11 +373,9 @@ stdout "third"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Multiple commands test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Multiple commands test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -425,11 +427,9 @@ exec true
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Negated stdout/stderr test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Negated stdout/stderr test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -474,11 +474,9 @@ stdout "$PREFIX-test[0-9]+"
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Env substitution in regex test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Env substitution in regex test failed:\n{}", error);
+    }
 }
 
 #[test]
@@ -514,11 +512,9 @@ stdout -
 
     fs::write(&script_path, script_content).unwrap();
     let result = run_test(&script_path);
-    assert!(
-        result.is_ok(),
-        "Dash for empty output test failed: {:?}",
-        result
-    );
+    if let Err(error) = result {
+        panic!("Dash for empty output test failed:\n{}", error);
+    }
 }
 
 #[test]
