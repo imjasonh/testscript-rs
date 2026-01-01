@@ -1,6 +1,6 @@
 [package]
 name = "testscript-rs"
-version = "0.2.11"
+version = "0.2.10"
 edition = "2021"
 authors = ["Jason Hall"]
 license = "Apache-2.0"
