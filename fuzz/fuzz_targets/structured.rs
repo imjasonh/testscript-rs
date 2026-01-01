@@ -28,19 +28,19 @@ struct FuzzFile {
 impl FuzzInput {
     fn to_txtar(&self) -> String {
         let mut result = String::new();
-        
+
         // Add commands
         for cmd in &self.commands {
             // Add condition prefix
             if let Some(ref condition) = cmd.condition {
                 result.push_str(&format!("[{}] ", condition));
             }
-            
+
             // Add negation
             if cmd.negated {
                 result.push_str("! ");
             }
-            
+
             // Add command name and args
             result.push_str(&cmd.name);
             for arg in &cmd.args {
@@ -51,15 +51,15 @@ impl FuzzInput {
                     result.push_str(&format!(" {}", arg));
                 }
             }
-            
+
             // Add background indicator
             if cmd.background {
                 result.push_str(" &");
             }
-            
+
             result.push('\n');
         }
-        
+
         // Add files
         for file in &self.files {
             result.push_str(&format!("-- {} --\n", file.name));
@@ -70,7 +70,7 @@ impl FuzzInput {
                 result.push('\n');
             }
         }
-        
+
         result
     }
 }
@@ -81,27 +81,30 @@ fuzz_target!(|data: &[u8]| {
     if let Ok(fuzz_input) = FuzzInput::arbitrary(&mut unstructured) {
         // Convert to txtar format
         let txtar_content = fuzz_input.to_txtar();
-        
+
         // Test the parser
         let result = parser::parse(&txtar_content);
-        
+
         // Verify parser doesn't panic and produces consistent results
         if let Ok(script) = result {
             // Validate the parsed structure
             // Note: parsed commands may be fewer than input due to empty lines, comments, etc.
-            assert!(script.commands.len() <= fuzz_input.commands.len().max(1000), "Too many commands parsed");
-            
+            assert!(
+                script.commands.len() <= fuzz_input.commands.len().max(1000),
+                "Too many commands parsed"
+            );
+
             for command in &script.commands {
                 assert!(!command.name.is_empty(), "Empty command name");
                 assert!(command.line_num > 0, "Invalid line number");
             }
-            
+
             for file in &script.files {
                 assert!(!file.name.is_empty(), "Empty file name");
             }
         }
     }
-    
+
     // Also test with raw bytes as backup for edge cases
     let raw_input = String::from_utf8_lossy(data);
     let _result = parser::parse(&raw_input);

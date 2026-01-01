@@ -6,6 +6,7 @@ repos:
         name: Rust formatter
       - id: clippy
         name: Rust linter
-        args: ['--all-targets', '--', '-D', 'warnings']
+        args:
+          ["--fix", "--allow-dirty", "--all-targets", "--", "-D", "warnings"]
       - id: cargo-check
         name: Rust compiler check
