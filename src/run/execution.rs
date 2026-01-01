@@ -315,8 +315,8 @@ fn execute_command_inner(
             let mut pattern_arg = None;
 
             for arg in &command.args {
-                if arg.starts_with("-count=") {
-                    let count_str = &arg[7..]; // Skip "-count="
+                if let Some(count_str) = arg.strip_prefix("-count=") {
+                    // Skip "-count="
                     count_option =
                         Some(count_str.parse::<usize>().map_err(|_| {
                             Error::command_error(&command.name, "Invalid count value")
