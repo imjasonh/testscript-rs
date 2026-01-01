@@ -261,6 +261,64 @@ impl TestEnvironment {
         Ok(())
     }
 
+    /// Compare command output with expected content and count matches
+    pub fn compare_output_with_count(
+        &self,
+        output_type: &str,
+        expected: &str,
+        expected_count: usize,
+    ) -> Result<()> {
+        let actual = match self.last_output {
+            Some(ref output) => match output_type {
+                "stdout" => String::from_utf8_lossy(&output.stdout)
+                    .trim_end()
+                    .to_string(),
+                "stderr" => String::from_utf8_lossy(&output.stderr)
+                    .trim_end()
+                    .to_string(),
+                _ => return Err(Error::command_error(output_type, "Unknown output type")),
+            },
+            None => {
+                return Err(Error::command_error(
+                    output_type,
+                    "No command output available",
+                ))
+            }
+        };
+
+        // Substitute environment variables in the expected pattern
+        let expected_substituted = self.substitute_env_vars(expected);
+
+        // Use regex to count matches
+        let regex_pattern = if expected_substituted.contains('^')
+            || expected_substituted.contains('$')
+            || expected_substituted.contains('[')
+            || expected_substituted.contains('(')
+            || expected_substituted.contains('*')
+            || expected_substituted.contains('.')
+        {
+            // Already a regex pattern
+            format!("(?su){}", expected_substituted)
+        } else {
+            // Treat as literal string and escape for regex
+            format!("(?su){}", regex::escape(&expected_substituted))
+        };
+
+        let regex = Regex::new(&regex_pattern)
+            .map_err(|e| Error::command_error(output_type, format!("Invalid regex: {}", e)))?;
+
+        let match_count = regex.find_iter(&actual).count();
+
+        if match_count != expected_count {
+            return Err(Error::OutputCompare {
+                expected: format!("{} (count: {})", expected_substituted, expected_count),
+                actual: format!("{} (count: {})", actual, match_count),
+            });
+        }
+
+        Ok(())
+    }
+
     /// Set environment variable
     pub fn set_env_var(&mut self, key: &str, value: &str) {
         self.env_vars.insert(key.to_string(), value.to_string());
@@ -316,7 +374,17 @@ impl TestEnvironment {
     pub fn substitute_env_vars(&self, input: &str) -> String {
         let mut result = input.to_string();
 
-        // Handle $VAR and ${VAR} patterns
+        // First handle ${VAR@R} patterns for regex quoting
+        for (key, value) in &self.env_vars {
+            let regex_quoted_pattern = format!("${{{}@R}}", key);
+            if result.contains(&regex_quoted_pattern) {
+                // Escape regex metacharacters in the value
+                let escaped_value = regex::escape(value);
+                result = result.replace(&regex_quoted_pattern, &escaped_value);
+            }
+        }
+
+        // Then handle normal $VAR and ${VAR} patterns
         for (key, value) in &self.env_vars {
             let patterns = [
                 format!("${{{}}}", key), // ${VAR}
