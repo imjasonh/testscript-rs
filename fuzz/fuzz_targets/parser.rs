@@ -6,11 +6,11 @@ use testscript_rs::parser;
 fuzz_target!(|data: &[u8]| {
     // Convert bytes to string, handling invalid UTF-8 gracefully
     let input = String::from_utf8_lossy(data);
-    
+
     // Fuzz the main parser function
     // The parser should never panic and always return a proper Result
     let result = parser::parse(&input);
-    
+
     // We don't care if parsing succeeds or fails, just that it doesn't panic
     // If it succeeds, verify the result is well-formed
     if let Ok(ref script) = result {
@@ -22,13 +22,13 @@ fuzz_target!(|data: &[u8]| {
             // Line number should be positive
             assert!(command.line_num > 0, "Invalid line number");
         }
-        
+
         for file in &script.files {
             // File name should not be empty if file exists
             assert!(!file.name.is_empty(), "Empty file name");
         }
     }
-    
+
     // Test that the parser is deterministic - same input should produce same result
     let result2 = parser::parse(&input);
     match (result.is_ok(), result2.is_ok()) {
